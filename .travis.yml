@@ -7,3 +7,7 @@ script:
 - ./toolbelt.sh -t
 after_success:
 - ./toolbelt.sh -d
+env:
+  global:
+  - secure: P6kQZjr4H+hLIawJW+5eKsgRq2VtWhrXGDtul7gQJFUNMdZn+EUuqxaF2E3Cs/z01KXwYovKiMDIfXR6SXAqDazAhmrpKLG6Bh1CMGYNZimDFA/E7AojKDUjz54mpYPL5mc2GRJjfveRHkVVghT/VuTyyPqyw/TFxiz8qwxJHdg=
+  - secure: Pp75ZwbxoEWwlmp0rF9gMSFQWcQ4rBGhBz73NghqMvP9yyeBRXwmolbU0lBzOoXStv4OXISF8OIfMopbDb+f5lhrYEWUj7tpFmVNfAEtgX7JKGjMkSZAN8E3PjDkSl1ckfA0T71h1PpYRMCwYNNftFgBxJOJZkmFxyi1C1lemKI=
