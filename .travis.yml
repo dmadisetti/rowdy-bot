@@ -1,0 +1,9 @@
+language: go
+go:
+- 1.2.1
+install:
+- ./toolbelt.sh -s
+script:
+- ./toolbelt.sh -t
+after_success:
+- ./toolbelt.sh -d
