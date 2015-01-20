@@ -9,7 +9,7 @@ import(
 
 func GetFollowing(s *Session) (count Counts){
 
-    response,err := s.Get("https://api.instagram.com/v1/users/" + s.Settings.GetId())
+    response,err := s.Get("https://api.instagram.com/v1/users/" + s.GetId())
     if err != nil {
         panic(err)
     }

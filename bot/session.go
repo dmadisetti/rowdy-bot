@@ -7,34 +7,14 @@ import (
     "appengine/datastore"
     "net/url"
     "bytes"
-    "log"
     "encoding/json"
-    "crypto/hmac"
-    "crypto/sha256"
-    "encoding/hex"
 )
 
 type Session struct {
-    Settings *Settings
+    settings *Settings
     context appengine.Context
     client *http.Client
 }
-
-type Settings struct {
-
-    Errored bool
-    Target float64
-    Magic float64
-
-    Id string
-    Client_id string
-    Client_secret string
-    Callback string
-    Hashtags []string
-
-    Access_token string
-}
-
 
 func NewSession(r *http.Request) *Session {
 
@@ -51,62 +31,62 @@ func NewSession(r *http.Request) *Session {
     s := &Session{
         context : c,
         client  : cl,
-        Settings: NewSettings(),
+        settings: NewSettings(),
     }
     return s
 }
 
+// Talk with the data layer
 func (session *Session) Load() bool{
-    err := datastore.Get(session.context,datastore.NewKey(session.context,"Settings","",1, nil),session.Settings)
+    err := datastore.Get(session.context,datastore.NewKey(session.context,"Settings","",1, nil),session.settings)
     return err != nil || !session.Valid()
 }
 
 func (session *Session) Save(){
-    datastore.Put(session.context,datastore.NewKey(session.context,"Settings","",1, nil),session.Settings)
+    datastore.Put(session.context,datastore.NewKey(session.context,"Settings","",1, nil),session.settings)
 }
 
 func (session *Session) Valid() bool{
-    return session.Settings.Valid()
+    return session.settings.Valid()
 }
 
+// HTTP functions
 func (session *Session) Get(uri string) (*http.Response, error){
-    log.Println(uri)
-    request,err := http.NewRequest("GET", uri +"?client_id=" + session.Settings.Client_id, nil)
+    request,err := http.NewRequest("GET", uri +"?client_id=" + session.settings.Client_id, nil)
     if err != nil {
         panic(err)
     }
-    session.Settings.Sign(*request)
+    session.settings.Sign(*request)
     return session.client.Do(request)
 }
 
 func (session *Session) Post(uri string, v url.Values) (*http.Response, error){
-    session.Settings.Authenticate(v)
-    request,err := http.NewRequest("POST", uri, bytes.NewBufferString(v.Encode()))
+    session.settings.Authenticate(v)
+    request,err := http.NewRequest("POST", uri, Buffer(v.Encode()))
     if err != nil {
         panic(err)
     }
-    session.Settings.Sign(*request)
+    session.settings.Sign(*request)
     return session.client.Do(request)
 }
 
-// Might be better under actions
+// Might be better breaking into actions
 func (session *Session) SetAuth(code string){
 
     v := url.Values{}
-    v.Set("client_id",session.Settings.Client_id)
-    v.Add("client_secret",session.Settings.Client_secret)
+    v.Set("client_id",session.settings.Client_id)
+    v.Add("client_secret",session.settings.Client_secret)
     v.Add("grant_type","authorization_code")
-    v.Add("redirect_uri",session.Settings.Callback)
+    v.Add("redirect_uri",session.settings.Callback)
     v.Add("code",code)
 
-    request,err := http.NewRequest("POST", "https://api.instagram.com/oauth/access_token", bytes.NewBufferString(v.Encode()))
+    request,err := http.NewRequest("POST", "https://api.instagram.com/oauth/access_token", Buffer(v.Encode()))
     if err != nil {
         panic(err)
     }
 
-    session.Settings.Sign(*request)
+    session.settings.Sign(*request)
     response,err := session.client.Do(request)
-    log.Println(response)
 
     //Decode request
     var auth Auth
@@ -116,54 +96,49 @@ func (session *Session) SetAuth(code string){
         panic(err)
     }
 
-    session.Settings.Access_token = auth.Access_token
+    session.settings.Access_token = auth.Access_token
     session.Save()
+}
+
+
+// Hashtags!
+func (session *Session) HasHashtags() bool{
+    return len(session.settings.Hashtags) > 0
 }
 
 func (session *Session) SetHashtags(tags []string){
-    session.Settings.Hashtags = tags
+    session.settings.Hashtags = tags
     session.Save()
 }
 
-func (s *Settings) Valid() bool{
-    return s.Id != "" && s.Client_id != "" && s.Client_secret != "" && s.Callback != ""
-}
-
-func (s *Settings) Authenticate(v url.Values){
-    v.Add("access_token", s.Access_token)
-}
-
-func (s *Settings) Sign(request http.Request){
-    ip := "127.0.0.1"
-    request.Header.Set("X-Insta-Forwarded-For", ip + "|" + ComputeHmac256(ip, s.Client_secret))
-}
-
-func ComputeHmac256(message string, secret string) string {
-    key := []byte(secret)
-    h := hmac.New(sha256.New, key)
-    h.Write([]byte(message))
-    return hex.EncodeToString(h.Sum(nil))
-}
-
-func (s *Settings) GetHashtag(intervals float64) (hashtag string){
-    hashtag = s.Hashtags[int(intervals) % len(s.Hashtags)]
+// Getters
+func (s *Session) GetHashtag(intervals float64) (hashtag string){
+    hashtag = s.settings.Hashtags[int(intervals) % len(s.Hashtags)]
+    // Some logging
     session.context.Infof("Hashtag: %v",hashtag)
     session.context.Infof("Interval: %v",intervals)
     return
 }
-
-func (s *Settings) GetId() string{
-    return s.Id
+func (s *Session) GetId() string{
+    return s.settings.Id
+}
+func (s *Session) GetMagic() float64 {
+    return s.settings.Magic
+}
+func (s *Session) GetTarget() float64 {
+    return s.settings.Target
 }
 
-func NewSettings()*Settings{   
-    return &Settings{
-        Errored : false,
-        Target  : 1000,
-        Magic   : 0.75,
-        Id      : "",
-        Client_id : "",
-        Client_secret: "",
-        Callback: "",
-    }
+func (s *Session) GetAuthLink() string{
+    return "https://instagram.com/oauth/authorize/?client_id="+ s.settings.Client_id +"&redirect_uri=" + s.settings.Callback + "&response_type=code&scope=likes+comments+relationships"
+}
+
+// Http helpers
+func (s *Session) Authenticate(v url.Values){
+    v.Add("access_token", s.settings.Access_token)
+}
+
+func (s *Session) Sign(request http.Request){
+    ip := "127.0.0.1"
+    request.Header.Set("X-Insta-Forwarded-For", ip + "|" + ComputeHmac256(ip, s.settings.Client_secret))
 }

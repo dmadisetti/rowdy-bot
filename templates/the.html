@@ -32,6 +32,6 @@
     </head>
     <body>
         <div id="chart" style="width: 900px; height: 500px; margin: 0 auto;"></div>
-        <a href="https://instagram.com/oauth/authorize/?client_id={{.Settings.Client_id}}&redirect_uri={{.Settings.Callback}}&response_type=code&scope=likes+comments+relationships">Reauthorize</a>
+        <a href="{{ .GetAuthLink }}">Reauthorize</a>
     </body>
 </html>

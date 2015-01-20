@@ -67,11 +67,11 @@ func processHandle(w http.ResponseWriter, r *http.Request, s *Session){
 
 
     // Round robin the hashtags. Allows for manual weighting eg: [#dog,#dog,#cute]
-    if len(s.Settings.Hashtags) == 0 {
+    if s.HasHashtags() {
         fmt.Fprint(w, "Please set hashtags")
         return
     }
-    posts := GetPosts(s,s.Settings.GetHashtag(intervals))
+    posts := GetPosts(s,s.GetHashtag(intervals))
 
     // Follow ratio function where target is the desired
     // amount of followers. 
@@ -81,7 +81,7 @@ func processHandle(w http.ResponseWriter, r *http.Request, s *Session){
     // decreasing function and some percentage of your 
     // target feels right
     count := GetFollowing(s)
-    follows := int64(float64(count.Followed_by) * math.Exp(float64(-count.Followed_by) * math.Log(s.Settings.Magic)/s.Settings.Target))
+    follows := int64(float64(count.Followed_by) * math.Exp(float64(-count.Followed_by) * math.Log(s.GetMagic())/s.GetTarget()))
     follows -= count.Follows // New follows
 
     // Save status at midnight
