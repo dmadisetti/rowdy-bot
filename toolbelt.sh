@@ -33,7 +33,7 @@ run(){
 }
 
 try(){
-    ./go_appengine/goapp build ./bot || exit 1;;
+    ./go_appengine/goapp build ./bot || exit 1;
     ./go_appengine/goapp test ./tests;
 }
 
