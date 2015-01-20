@@ -1,7 +1,6 @@
 package bot
 
 import (
-    "bytes"
     "crypto/hmac"
     "crypto/sha256"
     "encoding/hex"
