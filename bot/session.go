@@ -6,7 +6,6 @@ import (
     "appengine/urlfetch"
     "appengine/datastore"
     "net/url"
-    "bytes"
     "encoding/json"
 )
 
