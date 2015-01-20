@@ -7,6 +7,7 @@ import (
     "appengine/datastore"
     "net/url"
     "encoding/json"
+    "bytes"
 )
 
 type Session struct {
@@ -55,17 +56,17 @@ func (session *Session) Get(uri string) (*http.Response, error){
     if err != nil {
         panic(err)
     }
-    session.settings.Sign(*request)
+    session.Sign(*request)
     return session.client.Do(request)
 }
 
 func (session *Session) Post(uri string, v url.Values) (*http.Response, error){
-    session.settings.Authenticate(v)
-    request,err := http.NewRequest("POST", uri, Buffer(v.Encode()))
+    session.Authenticate(v)
+    request,err := http.NewRequest("POST", uri, bytes.NewBufferString(v.Encode()))
     if err != nil {
         panic(err)
     }
-    session.settings.Sign(*request)
+    session.Sign(*request)
     return session.client.Do(request)
 }
 
@@ -79,12 +80,12 @@ func (session *Session) SetAuth(code string){
     v.Add("redirect_uri",session.settings.Callback)
     v.Add("code",code)
 
-    request,err := http.NewRequest("POST", "https://api.instagram.com/oauth/access_token", Buffer(v.Encode()))
+    request,err := http.NewRequest("POST", "https://api.instagram.com/oauth/access_token", bytes.NewBufferString(v.Encode()))
     if err != nil {
         panic(err)
     }
 
-    session.settings.Sign(*request)
+    session.Sign(*request)
     response,err := session.client.Do(request)
 
     //Decode request
@@ -112,10 +113,10 @@ func (session *Session) SetHashtags(tags []string){
 
 // Getters
 func (s *Session) GetHashtag(intervals float64) (hashtag string){
-    hashtag = s.settings.Hashtags[int(intervals) % len(s.Hashtags)]
+    hashtag = s.settings.Hashtags[int(intervals) % len(s.settings.Hashtags)]
     // Some logging
-    session.context.Infof("Hashtag: %v",hashtag)
-    session.context.Infof("Interval: %v",intervals)
+    s.context.Infof("Hashtag: %v",hashtag)
+    s.context.Infof("Interval: %v",intervals)
     return
 }
 func (s *Session) GetId() string{
