@@ -67,7 +67,7 @@ func processHandle(w http.ResponseWriter, r *http.Request, s *Session){
 
 
     // Round robin the hashtags. Allows for manual weighting eg: [#dog,#dog,#cute]
-    if s.HasHashtags() {
+    if !s.HasHashtags() {
         fmt.Fprint(w, "Please set hashtags")
         return
     }
