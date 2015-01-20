@@ -145,8 +145,11 @@ func ComputeHmac256(message string, secret string) string {
     return hex.EncodeToString(h.Sum(nil))
 }
 
-func (s *Settings) GetHashtag(intervals float64) string{
-    return s.Hashtags[int(intervals) % len(s.Hashtags)]
+func (s *Settings) GetHashtag(intervals float64) (hashtag string){
+    hashtag = s.Hashtags[int(intervals) % len(s.Hashtags)]
+    session.context.Infof("Hashtag: %v",hashtag)
+    session.context.Infof("Interval: %v",intervals)
+    return
 }
 
 func (s *Settings) GetId() string{

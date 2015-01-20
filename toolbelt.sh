@@ -24,7 +24,7 @@ filename="backup_$current_datetime.txt"
 
 setup(){
     export FILE=go_appengine_sdk_linux_amd64-1.9.17.zip
-    curl -O https://storage.googleapis.com/appengine-sdks/featured/$FILE
+    curl -qO https://storage.googleapis.com/appengine-sdks/featured/$FILE
     unzip -q $FILE
 }
 
