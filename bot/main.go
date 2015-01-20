@@ -63,8 +63,13 @@ func processHandle(w http.ResponseWriter, r *http.Request, s *Session){
     // While highest is 4pm with a theoretical peak 
     // of 8.346 posts to fit under the limit of 100post/hr 
     // (You can do the riemann sum yourself)
-    likes := int(((math.Cos((math.Pi*intervals/144)-42) + SQRT3OVER2)/(1 + SQRT3OVER2)) * 8.346)
+    // likes := int(((math.Cos((math.Pi*intervals/144)-42) + SQRT3OVER2)/(1 + SQRT3OVER2)) * 8.346)
 
+    // Or we could just brute force 100 per hour
+    likes := 8 
+    if intervals % 3 == 0 {
+        likes += 1
+    }
 
     // Round robin the hashtags. Allows for manual weighting eg: [#dog,#dog,#cute]
     if !s.HasHashtags() {
