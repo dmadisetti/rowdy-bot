@@ -11,8 +11,8 @@ import(
 )
 
 var t *template.Template
-const DAY int64 = 60000 * 60 * 24
-const INTERVAL float64 = 60000 * 5
+const DAY int64 = 60 * 60 * 24
+const INTERVAL float64 = 60 * 5
 
 // Good enough
 const SQRT3OVER2 float64 = 0.86602540378 // math.Sqrt(3)/2
