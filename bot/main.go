@@ -67,7 +67,7 @@ func processHandle(w http.ResponseWriter, r *http.Request, s *Session){
 
     // Or we could just brute force 100 per hour
     likes := 8 
-    if intervals % 3 == 0 {
+    if int(intervals) % 3 == 0 {
         likes += 1
     }
 
