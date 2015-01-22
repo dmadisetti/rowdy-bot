@@ -86,8 +86,7 @@ func processHandle(w http.ResponseWriter, r *http.Request, s *Session){
     // decreasing function and some percentage of your 
     // target feels right
     count := GetFollowing(s)
-    follows := int64(float64(count.Followed_by) * math.Exp(float64(-count.Followed_by) * math.Log(s.GetMagic())/s.GetTarget()))
-    follows -= count.Follows // New follows
+    follows := FollowerDecay(count,s.GetMagic(),s.GetTarget())
 
     // Save status at midnight
     if intervals == 0 {
