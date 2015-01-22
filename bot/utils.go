@@ -15,5 +15,5 @@ func ComputeHmac256(message string, secret string) string {
 }
 
 func FollowerDecay(count Counts, magic float64, target float64) int64 {
-	return int64(float64(count.Followed_by) * math.Exp(float64(count.Followed_by) * math.Log(magic)/target))
+	return int64(float64(count.Followed_by) * math.Exp(float64(count.Followed_by) * math.Log(magic)/target)) - count.Follows
 }
