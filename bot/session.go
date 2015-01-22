@@ -112,8 +112,8 @@ func (session *Session) SetHashtags(tags []string){
 }
 
 // Getters
-func (s *Session) GetHashtag(intervals float64) (hashtag string){
-    hashtag = s.settings.Hashtags[int(intervals) % len(s.settings.Hashtags)]
+func (s *Session) GetHashtag(intervals int) (hashtag string){
+    hashtag = s.settings.Hashtags[intervals % len(s.settings.Hashtags)]
     // Some logging
     s.context.Infof("Hashtag: %v",hashtag)
     s.context.Infof("Interval: %v",intervals)

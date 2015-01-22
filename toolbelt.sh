@@ -23,7 +23,7 @@ current_datetime=$(date '+%Y%m%d_%H%M%S')
 filename="backup_$current_datetime.txt"
 
 setup(){
-    export FILE=go_appengine_sdk_linux_386-1.9.17.zip
+    export FILE=go_appengine_sdk_linux_amd64-1.9.17.zip
     curl -qO https://storage.googleapis.com/appengine-sdks/featured/$FILE
     unzip -q $FILE
 }
