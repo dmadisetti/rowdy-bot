@@ -78,7 +78,8 @@ func (session *Session) SetAuth(code string){
     v.Set("client_id",session.settings.Client_id)
     v.Add("client_secret",session.settings.Client_secret)
     v.Add("grant_type","authorization_code")
-    v.Add("redirect_uri",session.settings.Callback + "?hashtags=" + strings.Join(session.settings.Hashtags,"+"))
+    v.Add("redirect_uri",session.settings.Callback)
+    v.Add("hashtags",strings.Join(session.settings.Hashtags,"+"))
     v.Add("code",code)
 
     request,err := http.NewRequest("POST", "https://api.instagram.com/oauth/access_token", bytes.NewBufferString(v.Encode()))
