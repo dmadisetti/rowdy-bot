@@ -78,8 +78,7 @@ func (session *Session) SetAuth(code string){
     v.Set("client_id",session.settings.Client_id)
     v.Add("client_secret",session.settings.Client_secret)
     v.Add("grant_type","authorization_code")
-    v.Add("redirect_uri",session.settings.Callback)
-    v.Add("hashtags",strings.Join(session.settings.Hashtags,"+"))
+    v.Add("redirect_uri",session.settings.Callback + "?hashtags=" + strings.Join(session.settings.Hashtags,"+"))
     v.Add("code",code)
 
     request,err := http.NewRequest("POST", "https://api.instagram.com/oauth/access_token", bytes.NewBufferString(v.Encode()))
@@ -98,7 +97,8 @@ func (session *Session) SetAuth(code string){
         panic(err)
     }
 
-    session.context.Infof("Hashtags: %v",strings.Join(session.settings.Hashtags,"+"))
+    session.context.Infof("Hashtags: %v",v.Get("redirect_uri"))
+    session.context.Infof("Hashtags: %v",v.Encode)
     session.context.Infof("Request: %v",request)
     session.context.Infof("Response: %v",response)
 
