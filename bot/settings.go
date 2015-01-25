@@ -6,7 +6,7 @@ type Settings struct {
     Target float64
     Magic float64
 
-    // App specifics
+    // App specifics (Set these)
     Client_id string
     Client_secret string
     Callback string
@@ -22,7 +22,6 @@ func NewSettings()*Settings{
         Errored : false,
         Target  : 1000,
         Magic   : 0.75,
-        Id      : "",
         Client_id : "",
         Client_secret: "",
         Callback: "",
@@ -30,5 +29,9 @@ func NewSettings()*Settings{
 }
 
 func (s *Settings) Valid() bool{
-    return s.Id != "" && s.Client_id != "" && s.Client_secret != "" && s.Callback != ""
+    return s.Client_id != "" && s.Client_secret != "" && s.Callback != ""
+}
+
+func (s *Settings) Usable() bool{
+    return s.Id != "" && s.Access_token != "" && len(s.Hashtags) > 0 
 }

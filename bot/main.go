@@ -68,8 +68,8 @@ func processHandle(w http.ResponseWriter, r *http.Request, s *Session){
     }
 
     // Round robin the hashtags. Allows for manual weighting eg: [#dog,#dog,#cute]
-    if !s.HasHashtags() {
-        fmt.Fprint(w, "Please set hashtags")
+    if !s.Usable() {
+        fmt.Fprint(w, "Please set hashtags and authorize")
         return
     }
     posts := GetPosts(s,s.GetHashtag(intervals))

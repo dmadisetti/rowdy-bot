@@ -96,7 +96,7 @@ func (session *Session) SetAuth(code string){
         panic(err)
     }
 
-    session.context.Infof("Interval: %v",request)
+    session.context.Infof("Response: %v",response)
 
     session.settings.Access_token = auth.Access_token
     session.settings.Id = auth.User.Id
@@ -105,8 +105,8 @@ func (session *Session) SetAuth(code string){
 
 
 // Hashtags!
-func (session *Session) HasHashtags() bool{
-    return len(session.settings.Hashtags) > 0
+func (session *Session) Usable() bool{
+    return session.settings.Usable()
 }
 
 func (session *Session) SetHashtags(tags []string){
