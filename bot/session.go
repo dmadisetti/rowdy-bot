@@ -97,6 +97,8 @@ func (session *Session) SetAuth(code string){
         panic(err)
     }
 
+    session.context.Infof("Hashtags: %v",strings.Join(session.settings.Hashtags,"+"))
+    session.context.Infof("Request: %v",request)
     session.context.Infof("Response: %v",response)
 
     session.settings.Access_token = auth.Access_token
