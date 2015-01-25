@@ -96,7 +96,7 @@ func (session *Session) SetAuth(code string){
         panic(err)
     }
 
-    s.context.Infof("Interval: %v",request)
+    session.context.Infof("Interval: %v",request)
 
     session.settings.Access_token = auth.Access_token
     session.settings.Id = auth.User.Id
