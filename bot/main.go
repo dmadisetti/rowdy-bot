@@ -4,15 +4,16 @@ import(
     "net/http"
     "fmt"
     "time"
-    "math"
+    //"math"
     "strings"
-    "log"
+    //"log"
     "html/template"
 )
 
 var t *template.Template
 const DAY int64 = 60 * 60 * 24
 const INTERVAL float64 = 60 * 5
+const HOUR float64 = 60 * 60
 
 // Good enough
 const SQRT3OVER2 float64 = 0.86602540378 // math.Sqrt(3)/2
@@ -48,7 +49,7 @@ func processHandle(w http.ResponseWriter, r *http.Request, s *Session){
 
     // Grab intervals since day start 
     now := time.Now().Unix()
-    intervals := math.Floor(float64(now % DAY) / INTERVAL)
+    intervals := int(float64(now % DAY) / INTERVAL)
 
     // Our golden function. 
     // (cos((pi*x/144)-42) + sqrt(3)/2)/(1+sqrt(3)/2)
@@ -61,8 +62,8 @@ func processHandle(w http.ResponseWriter, r *http.Request, s *Session){
     // likes := int(((math.Cos((math.Pi*intervals/144)-42) + SQRT3OVER2)/(1 + SQRT3OVER2)) * 8.346)
 
     // Or we could just brute force 100 per hour
-    likes := 8 
-    if int(intervals) % 3 == 0 {
+    likes := int(100 / int(HOUR / INTERVAL))
+    if intervals % int(HOUR / INTERVAL) / (100 % int(HOUR / INTERVAL)) == 0 {
         likes += 1
     }
 
@@ -81,8 +82,7 @@ func processHandle(w http.ResponseWriter, r *http.Request, s *Session){
     // decreasing function and some percentage of your
     // target feels right
     count := GetFollowing(s)
-    follows := int64(float64(count.Followed_by) * math.Exp(float64(-count.Followed_by) * math.Log(s.GetMagic())/s.GetTarget()))
-    follows -= count.Follows // New follows
+    follows := FollowerDecay(count,s.GetMagic(),s.GetTarget())
 
     // Save status at midnight
     if intervals == 0 {
@@ -91,20 +91,21 @@ func processHandle(w http.ResponseWriter, r *http.Request, s *Session){
 
     // Go from end to reduce collision
     i := 19
-    for likes > 0 || follows > 0 {
+    for (likes > 0 || follows > 0) && i >= 0 {
 
+        // Process likes
         if likes > 0 {
             LikePosts(s, posts[i].Id)
-        }
-        if follows > 0 {
-            FollowUser(s, posts[i].Id)
-        }
+            likes--
 
-        log.Println(posts[i])
+        // Doing this seperately reaches larger audience
+        // Never exceeds 12/11 at a given time
+        }else if follows > 0 {
+            FollowUser(s, posts[i].Id)
+            follows--
+        }
 
         // Decrement
-        likes--
-        follows--
         i--
     }
 }
