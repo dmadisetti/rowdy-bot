@@ -98,7 +98,7 @@ func (session *Session) SetAuth(code string){
     }
 
     session.context.Infof("Hashtags: %v",v.Get("redirect_uri"))
-    session.context.Infof("Hashtags: %v",v.Encode)
+    session.context.Infof("Hashtags: %v",v.Encode())
     session.context.Infof("Request: %v",request)
     session.context.Infof("Response: %v",response)
 
