@@ -1,0 +1,15 @@
+.invalid {
+    background-color: #F00;
+}
+.hashgroup {
+    display: inline-block;
+    clear: both;
+    float: left;
+}
+.remove {
+    display: inline-block;
+}
+#form{
+    display: table;
+    margin: 50px auto;
+}

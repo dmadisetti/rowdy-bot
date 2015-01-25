@@ -6,12 +6,14 @@ type Settings struct {
     Target float64
     Magic float64
 
-    Id string
+    // App specifics
     Client_id string
     Client_secret string
     Callback string
     Hashtags []string
 
+    // Account Specific
+    Id string
     Access_token string
 }
 

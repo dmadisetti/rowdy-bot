@@ -97,6 +97,7 @@ func (session *Session) SetAuth(code string){
     }
 
     session.settings.Access_token = auth.Access_token
+    session.settings.Id = auth.User.Id
     session.Save()
 }
 
@@ -129,8 +130,13 @@ func (s *Session) GetTarget() float64 {
     return s.settings.Target
 }
 
+// For rendering
 func (s *Session) GetAuthLink() string{
-    return "https://instagram.com/oauth/authorize/?client_id="+ s.settings.Client_id +"&redirect_uri=" + s.settings.Callback + "&response_type=code&scope=likes+comments+relationships"
+    return "https://instagram.com/oauth/authorize/?client_id="+ s.settings.Client_id + "&response_type=code&scope=likes+comments+relationships&redirect_uri=" + s.settings.Callback
+}
+
+func (s *Session) GetHashtags() []string{
+    return s.settings.Hashtags
 }
 
 // Http helpers

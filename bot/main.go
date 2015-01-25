@@ -21,7 +21,6 @@ const SQRT3OVER2 float64 = 0.86602540378 // math.Sqrt(3)/2
 func init(){
     NewHandler("/", mainHandle)
     NewHandler("/auth", authHandle)
-    NewHandler("/hashtag", hashtagHandle)
     NewHandler("/process", processHandle)
 }
 
@@ -41,11 +40,7 @@ func mainHandle(w http.ResponseWriter, r *http.Request, s *Session){
 
 func authHandle(w http.ResponseWriter, r *http.Request, s *Session){
     s.SetAuth(r.URL.Query()["code"][0])
-    http.Redirect(w,r,"/",302)
-}
-
-func hashtagHandle(w http.ResponseWriter, r *http.Request, s *Session) {
-    s.SetHashtags(strings.Split(r.URL.Query()["hashtags"][0],","))
+    s.SetHashtags(strings.Split(r.URL.Query()["hashtags"][0],"+"))
     http.Redirect(w,r,"/",302)
 }
 
@@ -79,11 +74,11 @@ func processHandle(w http.ResponseWriter, r *http.Request, s *Session){
     posts := GetPosts(s,s.GetHashtag(intervals))
 
     // Follow ratio function where target is the desired
-    // amount of followers. 
+    // amount of followers.
     // e^(x*ln(magic)/target)
-    // I wish could say there's some science behind why 
+    // I wish could say there's some science behind why
     // we're doing this, but ultimately we just need a
-    // decreasing function and some percentage of your 
+    // decreasing function and some percentage of your
     // target feels right
     count := GetFollowing(s)
     follows := int64(float64(count.Followed_by) * math.Exp(float64(-count.Followed_by) * math.Log(s.GetMagic())/s.GetTarget()))

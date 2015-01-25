@@ -13,8 +13,14 @@ type Status struct {
     Data Data
 }
 
+type User struct {
+    Id string
+    // Profile_picture string
+}
+
 type Auth struct {
     Access_token string // Can parse apart for user
+    User User
 }
 
 type Post struct {
