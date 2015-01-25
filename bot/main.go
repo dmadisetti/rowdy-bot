@@ -40,8 +40,8 @@ func mainHandle(w http.ResponseWriter, r *http.Request, s *Session){
 }
 
 func authHandle(w http.ResponseWriter, r *http.Request, s *Session){
-    s.SetAuth(r.URL.Query()["code"][0])
     s.SetHashtags(strings.Split(r.URL.Query()["hashtags"][0]," "))
+    s.SetAuth(r.URL.Query()["code"][0])
     http.Redirect(w,r,"/",302)
 }
 

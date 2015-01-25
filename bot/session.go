@@ -1,13 +1,14 @@
 package bot
 
 import (
-    "net/http"
     "appengine"
-    "appengine/urlfetch"
     "appengine/datastore"
-    "net/url"
-    "encoding/json"
+    "appengine/urlfetch"
     "bytes"
+    "encoding/json"
+    "net/http"
+    "net/url"
+    "strings"
 )
 
 type Session struct {
@@ -77,7 +78,7 @@ func (session *Session) SetAuth(code string){
     v.Set("client_id",session.settings.Client_id)
     v.Add("client_secret",session.settings.Client_secret)
     v.Add("grant_type","authorization_code")
-    v.Add("redirect_uri",session.settings.Callback)
+    v.Add("redirect_uri",session.settings.Callback + "?hashtags=" + strings.Join(session.settings.Hashtags,"+"))
     v.Add("code",code)
 
     request,err := http.NewRequest("POST", "https://api.instagram.com/oauth/access_token", bytes.NewBufferString(v.Encode()))
