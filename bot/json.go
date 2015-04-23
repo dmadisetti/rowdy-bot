@@ -6,7 +6,10 @@ type Counts struct {
 }
 
 type Data struct {
+    Id string
     Counts Counts
+    Media_count int64
+    Name string
 }
 
 type Status struct {
@@ -15,7 +18,7 @@ type Status struct {
 
 type User struct {
     Id string
-    // Profile_picture string
+    Data Data
 }
 
 type Auth struct {
@@ -29,4 +32,8 @@ type Post struct {
 
 type Posts struct {
     Data []Post
+}
+
+type Tag struct {
+    Data Data
 }

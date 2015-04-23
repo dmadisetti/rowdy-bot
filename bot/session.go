@@ -51,6 +51,15 @@ func (session *Session) Valid() bool{
     return session.settings.Valid()
 }
 
+func (session *Session) InitAuth(client_id, client_secret, callback string){
+    if !session.Valid(){
+        session.settings.Client_id = client_id
+        session.settings.Client_secret = client_secret
+        session.settings.Callback = callback
+        session.Save()
+    }
+}
+
 // HTTP functions
 func (session *Session) Get(uri string) (*http.Response, error){
     request,err := http.NewRequest("GET", uri +"?client_id=" + session.settings.Client_id, nil)

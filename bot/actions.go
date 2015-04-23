@@ -7,6 +7,9 @@ import(
     "encoding/json"
 )
 
+// Could dynamically build these, but naw
+
+// Get actions
 func GetFollowing(s *Session) (count Counts){
 
     response,err := s.Get("https://api.instagram.com/v1/users/" + s.GetId())
@@ -21,8 +24,6 @@ func GetFollowing(s *Session) (count Counts){
     if err != nil {
         panic(err)
     }
-
-    log.Println(status)
 
     count = status.Data.Counts
     return
@@ -48,7 +49,47 @@ func GetPosts(s *Session, hashtag string) []Post{
     return posts.Data
 }
 
-func LikePosts(s *Session, id string){
+func GetUser(s *Session, id string) User{
+
+    response,err := s.Get("https://api.instagram.com/v1/users/" + id)
+    if err != nil {
+        panic(err)
+    }
+
+    //Decode request
+    var user User
+    decoder := json.NewDecoder(response.Body)
+    err = decoder.Decode(&user)
+    if err != nil {
+        panic(err)
+    }
+
+    return user
+
+}
+
+
+func GetTag(s *Session, hashtag string) Tag{
+
+    response,err := s.Get("https://api.instagram.com/v1/tags/" + hashtag)
+    if err != nil {
+        panic(err)
+    }
+
+    //Decode request
+    var tag Tag
+    decoder := json.NewDecoder(response.Body)
+    err = decoder.Decode(&tag)
+    if err != nil {
+        panic(err)
+    }
+
+    return tag
+
+}
+
+// Post actions
+func LikePosts(s *Session, id string) {
     v := url.Values{}
 
     response ,err := s.Post("https://api.instagram.com/v1/media/"+id+"/likes",v)
@@ -68,19 +109,3 @@ func FollowUser(s *Session, id string){
     }
     log.Println(response)
 }
-
-// func CommentPost(r *http.Request, id string){
-//     c := appengine.NewContext(r)
-//     client := urlfetch.Client(c)
-// 
-//     v := url.Values{}
-//     v.Set("access_token", "Token")
-//     v.Add("text", "woof!")
-// 
-//     response,err := client.PostForm("https://api.instagram.com/v1/media/"+id+"/comments",v)
-//     if err != nil {
-//         panic(err)
-//     }
-// 
-//     log.Println(response)
-// }

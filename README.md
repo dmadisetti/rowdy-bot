@@ -8,14 +8,14 @@ Put together over the weekend.
 Our stuffed dog is awesome and deserves to become instagram famous. So I wrote him a bot. We're collecting follower data, so we'll see how it goes.
 
 ---
-Manage settings from the GAE datastore viewer
+Manage upon hitting the site or from the GAE datastore viewer
 
 ```
 	// Variables for exponential decay of follower ratio
     Target float64 
     Magic float64
 
-    // App specifics (Set these)
+    // App specifics (Set these upon visiting the page)
     Client_id string // Client in instagram app settings
     Client_secret string // Secret in instagram app settings
     Callback string // Callback configured in instagram app settings
@@ -39,9 +39,9 @@ This is our dog
 Objectives:
 
 - More Go - `Check`
-- Become Instafamous - `Pending`
+- Become Instafamous - `Sorta?`
+- Expand bot to hashtag crawl and use ML - `In progess`
 
 Todo:
 
-- Hashtag crawl and learning (Prob won't bother)
 - Follow back (Maybe)

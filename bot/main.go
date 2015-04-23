@@ -21,8 +21,13 @@ const SQRT3OVER2 float64 = 0.86602540378 // math.Sqrt(3)/2
 // Start er up!
 func init(){
     NewHandler("/", mainHandle)
+    NewHandler("/init", tagHandle)
     NewHandler("/auth", authHandle)
     NewHandler("/process", processHandle)
+
+    // For testing
+    NewHandler("/tag", tagHandle)
+    NewHandler("/user", userHandle)
 }
 
 // Handles
@@ -108,4 +113,17 @@ func processHandle(w http.ResponseWriter, r *http.Request, s *Session){
         // Decrement
         i--
     }
+}
+
+// Just some testing endpoints
+func tagHandle(w http.ResponseWriter, r *http.Request, s *Session){
+    tag := GetTag(s, r.URL.Query()["hashtag"][0])
+    fmt.Fprint(w, tag.Data.Media_count)
+}
+
+// Snoop Doggy Dog
+// http://127.0.0.1:8080/user?user=1574083
+func userHandle(w http.ResponseWriter, r *http.Request, s *Session){
+    tag := GetUser(s, r.URL.Query()["user"][0])
+    fmt.Fprint(w, tag.Data.Counts.Followed_by)
 }
