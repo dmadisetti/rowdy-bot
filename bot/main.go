@@ -25,6 +25,9 @@ func init(){
     NewHandler("/auth", authHandle)
     NewHandler("/process", processHandle)
 
+    // For ML
+    NewHandler("/learn", learningHandle)
+
     // For testing
     NewHandler("/tag", tagHandle)
     NewHandler("/user", userHandle)
@@ -56,17 +59,8 @@ func processHandle(w http.ResponseWriter, r *http.Request, s *Session){
     now := time.Now().Unix()
     intervals := int(float64(now % DAY) / INTERVAL)
 
-    // Our golden function. 
-    // (cos((pi*x/144)-42) + sqrt(3)/2)/(1+sqrt(3)/2)
-    // Cyclical cos function adjusted to represent the 
-    // day in 288 parts (intervals of 5 minutes) and for
-    // The lowest part of the day to be around 1AM-5AM EST
-    // While highest is 4pm with a theoretical peak 
-    // of 8.346 posts to fit under the limit of 100post/hr 
-    // (You can do the riemann sum yourself)
-    // likes := int(((math.Cos((math.Pi*intervals/144)-42) + SQRT3OVER2)/(1 + SQRT3OVER2)) * 8.346)
-
-    // Or we could just brute force 100 per hour
+    // Had some fancy math for peroidictiy. But
+    // we could just brute force 100 per hour
     likes := int(100 / int(HOUR / INTERVAL))
     if intervals % int(HOUR / INTERVAL) / (100 % int(HOUR / INTERVAL)) == 0 {
         likes += 1
@@ -86,7 +80,7 @@ func processHandle(w http.ResponseWriter, r *http.Request, s *Session){
     // we're doing this, but ultimately we just need a
     // decreasing function and some percentage of your
     // target feels right
-    count := GetFollowing(s)
+    count := GetStatus(s)
     follows := FollowerDecay(count,s.GetMagic(),s.GetTarget())
 
     // Save status at midnight
@@ -100,19 +94,25 @@ func processHandle(w http.ResponseWriter, r *http.Request, s *Session){
 
         // Process likes
         if likes > 0 {
-            LikePosts(s, posts[i].Id)
+            LikePosts(s, posts.Data[i].Id)
             likes--
 
         // Doing this seperately reaches larger audience
         // Never exceeds 12/11 at a given time
         }else if follows > 0 {
-            FollowUser(s, posts[i].Id)
+            FollowUser(s, posts.Data[i].Id)
             follows--
         }
 
         // Decrement
         i--
     }
+}
+
+// Learning handle. Majority of logic in sentience.go
+func learningHandle(w http.ResponseWriter, r *http.Request, s *Session){
+    tag := GetUser(s, r.URL.Query()["user"][0])
+    fmt.Fprint(w, tag.Data.Counts.Followed_by)
 }
 
 // Just some testing endpoints

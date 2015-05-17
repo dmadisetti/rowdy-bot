@@ -10,102 +10,109 @@ import(
 // Could dynamically build these, but naw
 
 // Get actions
-func GetFollowing(s *Session) (count Counts){
-
-    response,err := s.Get("https://api.instagram.com/v1/users/" + s.GetId())
+func get(s *Session, url string, class interface{}) (*json.Decoder, interface{}) {
+    response,err := s.Get(url)
     if err != nil {
         panic(err)
     }
 
    //Decode request
-    var status Status
     decoder := json.NewDecoder(response.Body)
-    err = decoder.Decode(&status)
+    err = decoder.Decode(&class)
     if err != nil {
         panic(err)
     }
 
-    count = status.Data.Counts
+    return decoder, class
+}
+
+func GetStatus(s *Session) (counts Counts){
+    // var status Status
+    _, face := get(s, "https://api.instagram.com/v1/users/" + s.GetId(), new(Status))
+    if status, ok := face.(Status); ok {
+        counts = status.Data.Counts
+    } else {
+        panic("GetStatus Broke")
+    }
     return
 }
 
-func GetPosts(s *Session, hashtag string) []Post{
-
-    response,err := s.Get("https://api.instagram.com/v1/tags/" + hashtag +"/media/recent")
-    if err != nil {
-        panic(err)
+func GetPosts(s *Session, hashtag string) (posts Posts){
+    decoder, face := get(s, "https://api.instagram.com/v1/tags/" + hashtag +"/media/recent", new(Posts))
+    if ps, ok := face.(Posts); ok {
+        posts = ps
+        posts.Next = getPagination(decoder)
+    } else {
+        panic("GetPosts Broke")
     }
-
-    log.Println(response)
-
-    //Decode request
-    var posts Posts
-    decoder := json.NewDecoder(response.Body)
-    err = decoder.Decode(&posts)
-    if err != nil {
-        panic(err)
-    }
-
-    return posts.Data
+    return posts
 }
 
-func GetUser(s *Session, id string) User{
-
-    response,err := s.Get("https://api.instagram.com/v1/users/" + id)
-    if err != nil {
-        panic(err)
+func GetUser(s *Session, id string) (user User){
+    _, face := get(s, "https://api.instagram.com/v1/users/" + id, new(User))
+    if u, ok := face.(User); ok {
+        user = u
+    } else {
+        panic("GetPosts Broke")
     }
-
-    //Decode request
-    var user User
-    decoder := json.NewDecoder(response.Body)
-    err = decoder.Decode(&user)
-    if err != nil {
-        panic(err)
-    }
-
-    return user
-
+    return
 }
 
-
-func GetTag(s *Session, hashtag string) Tag{
-
-    response,err := s.Get("https://api.instagram.com/v1/tags/" + hashtag)
-    if err != nil {
-        panic(err)
+func getPeople(s *Session, url string, id string) (users Users){
+    decoder, face := get(s, url, new(Users))
+    if us, ok := face.(Users); ok {
+        users = us
+        users.Next = getPagination(decoder)
+    } else {
+        panic("GetPosts Broke")
     }
+    return users
+}
 
-    //Decode request
-    var tag Tag
-    decoder := json.NewDecoder(response.Body)
-    err = decoder.Decode(&tag)
-    if err != nil {
-        panic(err)
+func GetFollowing(s *Session, id string) Users{
+    return getPeople(s, "https://api.instagram.com/v1/users/" + s.GetId() +"/follow", id)
+}
+
+func GetFollowers(s *Session, id string) Users{
+    return getPeople(s, "https://api.instagram.com/v1/users/" + s.GetId() +"/followed-by", id)
+}
+
+func GetTag(s *Session, hashtag string) (tag Tag){
+    _, face := get(s, "https://api.instagram.com/v1/tags/" + hashtag, new(Tag))
+    if t, ok := face.(Tag); ok {
+        tag = t
+    } else {
+        panic("GetPosts Broke")
     }
-
-    return tag
-
+    return
 }
 
 // Post actions
-func LikePosts(s *Session, id string) {
-    v := url.Values{}
-
-    response ,err := s.Post("https://api.instagram.com/v1/media/"+id+"/likes",v)
+func post(s *Session, url string, v url.Values) {
+    response ,err := s.Post(url,v)
     if err != nil {
         panic(err)
     }
     log.Println(response)
+}
+
+func LikePosts(s *Session, id string) {
+    v := url.Values{}
+    post(s, "https://api.instagram.com/v1/media/"+id+"/likes", v)
 }
 
 func FollowUser(s *Session, id string){
     v := url.Values{}
     v.Set("action", "follow")
+    post(s, "https://api.instagram.com/v1/users/"+ strings.Split(id,"_")[1] +"/relationship", v)
+}
 
-    response,err := s.Post("https://api.instagram.com/v1/users/"+ strings.Split(id,"_")[1] +"/relationship",v)
+// Helper to grab next page
+func getPagination(decoder *json.Decoder) string{
+    var page Pagination
+    err := decoder.Decode(&page)
     if err != nil {
         panic(err)
     }
-    log.Println(response)
+    return page.Next_url
 }

@@ -5,11 +5,16 @@ type Counts struct {
     Followed_by int64
 }
 
+type Pagination struct{
+    Next_url string // https:\/\/api.instagram.com\/v1\/users\/3\/media\/recent?access_token=184046392.f59def8.c5726b469ad2462f85c7cea5f72083c0&max_id=205140190233104928_3
+}
+
 type Data struct {
     Id string
     Counts Counts
     Media_count int64
     Name string
+    Next string
 }
 
 type Status struct {
@@ -19,6 +24,11 @@ type Status struct {
 type User struct {
     Id string
     Data Data
+}
+
+type Users struct {
+    Data []User
+    Next string
 }
 
 type Auth struct {
@@ -32,6 +42,7 @@ type Post struct {
 
 type Posts struct {
     Data []Post
+    Next string
 }
 
 type Tag struct {
