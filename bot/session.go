@@ -60,9 +60,24 @@ func (session *Session) InitAuth(client_id, client_secret, callback string){
     }
 }
 
+func (session *Session) SetLearning() bool{
+    set := session.settings.Learning
+    session.settings.Learning = true
+    return !set
+}
+
 // HTTP functions
 func (session *Session) Get(uri string) (*http.Response, error){
     request,err := http.NewRequest("GET", uri +"?client_id=" + session.settings.Client_id, nil)
+    if err != nil {
+        panic(err)
+    }
+    session.Sign(*request)
+    return session.client.Do(request)
+}
+
+func (session *Session) RawGet(uri string) (*http.Response, error){
+    request,err := http.NewRequest("GET", uri, nil)
     if err != nil {
         panic(err)
     }

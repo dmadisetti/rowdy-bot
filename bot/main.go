@@ -4,9 +4,7 @@ import(
     "net/http"
     "fmt"
     "time"
-    //"math"
     "strings"
-    //"log"
     "html/template"
 )
 
@@ -94,13 +92,13 @@ func processHandle(w http.ResponseWriter, r *http.Request, s *Session){
 
         // Process likes
         if likes > 0 {
-            LikePosts(s, posts.Data[i].Id)
+            go LikePosts(s, posts.Data[i].Id)
             likes--
 
         // Doing this seperately reaches larger audience
         // Never exceeds 12/11 at a given time
         }else if follows > 0 {
-            FollowUser(s, posts.Data[i].Id)
+            go FollowUser(s, posts.Data[i].Id)
             follows--
         }
 
@@ -111,8 +109,7 @@ func processHandle(w http.ResponseWriter, r *http.Request, s *Session){
 
 // Learning handle. Majority of logic in sentience.go
 func learningHandle(w http.ResponseWriter, r *http.Request, s *Session){
-    tag := GetUser(s, r.URL.Query()["user"][0])
-    fmt.Fprint(w, tag.Data.Counts.Followed_by)
+    fmt.Fprint(w, Learn(s))
 }
 
 // Just some testing endpoints
@@ -124,6 +121,6 @@ func tagHandle(w http.ResponseWriter, r *http.Request, s *Session){
 // Snoop Doggy Dog
 // http://127.0.0.1:8080/user?user=1574083
 func userHandle(w http.ResponseWriter, r *http.Request, s *Session){
-    tag := GetUser(s, r.URL.Query()["user"][0])
-    fmt.Fprint(w, tag.Data.Counts.Followed_by)
+    user := GetUser(s, r.URL.Query()["user"][0])
+    fmt.Fprint(w, user.Data.Counts.Followed_by)
 }

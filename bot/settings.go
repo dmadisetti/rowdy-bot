@@ -12,6 +12,10 @@ type Settings struct {
     Callback string
     Hashtags []string
 
+    // Learning States
+    Learning bool
+    Learned bool
+
     // Account Specific
     Id string
     Access_token string

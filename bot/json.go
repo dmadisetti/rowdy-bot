@@ -3,6 +3,7 @@ package bot
 type Counts struct {
     Follows int64
     Followed_by int64
+    Media int64
 }
 
 type Pagination struct{
@@ -13,7 +14,7 @@ type Data struct {
     Id string
     Counts Counts
     Media_count int64
-    Name string
+    Username string
     Next string
 }
 
@@ -23,12 +24,14 @@ type Status struct {
 
 type User struct {
     Id string
+    Username string
     Data Data
 }
 
 type Users struct {
     Data []User
     Next string
+    Pagination Pagination
 }
 
 type Auth struct {
@@ -43,6 +46,7 @@ type Post struct {
 type Posts struct {
     Data []Post
     Next string
+    Pagination Pagination
 }
 
 type Tag struct {
