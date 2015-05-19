@@ -38,7 +38,7 @@ try(){
 }
 
 deploy(){
-    echo $PASSWORD | go_appengine/appcfg.py --email=$EMAIL --passin update ./
+    echo $PASSWORD | go_appengine/appcfg.py --email=$EMAIL --noauth_local_webserver --passin update ./
 }
 
 backup(){
