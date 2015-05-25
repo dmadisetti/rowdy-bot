@@ -11,6 +11,7 @@ show_help(){
     b - backup \n\
     i - init fom backup \n\
     s - setup\n\
+    l - train model\n\
     p - ci push
     c - clean
     \n\
@@ -61,7 +62,21 @@ clean(){
     rm bulkloader*;
 }
 
-while getopts "h?rtpsibcdx:" opt; do
+train(){
+    fuser 8080/tcp && {
+        curl -s http://localhost:8080/flush
+        echo "\nStarting run:"
+        while :
+        do
+            resp=$(curl -s http://localhost:8080/learn)
+            test "$resp" = "Stop" && exit 0
+            echo "$resp"
+            sleep 300
+        done
+    }
+}
+
+while getopts "h?rtpsibcldx:" opt; do
     case "$opt" in
     h|\?)
         show_help
@@ -81,6 +96,8 @@ while getopts "h?rtpsibcdx:" opt; do
     p)  push
         ;;
     c)  clean
+        ;;
+    l)  train
         ;;
     esac
 done

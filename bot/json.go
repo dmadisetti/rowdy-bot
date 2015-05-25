@@ -15,7 +15,6 @@ type Data struct {
     Counts Counts
     Media_count int64
     Username string
-    Next string
 }
 
 type Status struct {
@@ -30,7 +29,6 @@ type User struct {
 
 type Users struct {
     Data []User
-    Next string
     Pagination Pagination
 }
 
@@ -41,11 +39,11 @@ type Auth struct {
 
 type Post struct {
     Id string // Can parse apart for user
+    Tags []string
 }
 
 type Posts struct {
     Data []Post
-    Next string
     Pagination Pagination
 }
 

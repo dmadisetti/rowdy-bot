@@ -4,7 +4,6 @@ import(
     "log"
     "strings"
     "io/ioutil"
-    //"bytes"
     "net/url"
     "encoding/json"
 )
@@ -29,6 +28,24 @@ func GetStatus(s *Session) (count Counts){
 
     count = status.Data.Counts
     return
+}
+
+func GetMedia(s *Session, id string) Posts{
+    params := map[string]string{"MIN_TIMESTAMP":SixHoursAgo(),"COUNT":"3"}
+    response,err := s.GetParamed("https://api.instagram.com/v1/users/"+id+"/media/recent/", params)
+    if err != nil {
+        panic(err)
+    }
+
+    //Decode request
+    var posts Posts
+    decoder := json.NewDecoder(response.Body)
+    err = decoder.Decode(&posts)
+    if err != nil {
+        panic(err)
+    }
+
+    return posts
 }
 
 func GetPosts(s *Session, hashtag string) Posts{
@@ -90,9 +107,9 @@ func GetTag(s *Session, hashtag string) Tag{
 
 }
 
-func GetNext(s *Session, users *Users) Users{
-    log.Println(users.Pagination.Next_url)
-    response,err := s.RawGet(users.Pagination.Next_url)
+func GetNext(s *Session, url string) Users{
+    log.Println(url)
+    response,err := s.RawGet(url)
     if err != nil {
         panic(err)
     }
@@ -104,9 +121,10 @@ func GetNext(s *Session, users *Users) Users{
         err = json.Unmarshal(data, &bunch)
     }
     if err != nil {
+        log.Println(string(data[:]))
         panic(err)
     }
-    
+
     return bunch
 }
 
@@ -121,6 +139,7 @@ func getPeople(s *Session, url string) (users Users){
         err = json.Unmarshal(data, &users)
     }
     if err != nil {
+        log.Println(string(data[:]))
         panic(err)
     }
 
@@ -128,7 +147,7 @@ func getPeople(s *Session, url string) (users Users){
 }
 
 func GetFollowing(s *Session) Users{
-    return getPeople(s, "https://api.instagram.com/v1/users/" + s.GetId() +"/follow")
+    return getPeople(s, "https://api.instagram.com/v1/users/" + s.GetId() +"/follows")
 }
 
 func GetFollowers(s *Session) Users{

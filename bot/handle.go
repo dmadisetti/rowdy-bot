@@ -25,10 +25,9 @@ func (h *Handler)preHandle(w http.ResponseWriter, r *http.Request){
     session := NewSession(r)
 
     // get session from data store or create and prompt config
-
-    if session.Load() {
+    if !session.LoadSettings() {
         if keys, ok := parseKeys(r); ok{
-            session.InitAuth(keys["client_id"][0],keys["client_secret"][0],keys["callback"][0])
+            session.InitAuth(keys["client_id"][0],keys["client_secret"][0],keys["callback"][0],keys["hash"][0])
         } else {
             session.Save()
             t, e := template.ParseGlob("templates/setup.html")
@@ -44,6 +43,10 @@ func (h *Handler)preHandle(w http.ResponseWriter, r *http.Request){
             }
             return
         }
+    }
+
+    if !session.LoadMachine() {
+        session.Save()
     }
 
     // Call handler set earlier

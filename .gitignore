@@ -4,3 +4,4 @@ static/packages/
 *.lock
 go_appengine*
 _go_manifest.txt
+compute

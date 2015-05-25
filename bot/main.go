@@ -3,28 +3,36 @@ package bot
 import(
     "net/http"
     "fmt"
-    "time"
     "strings"
     "html/template"
 )
 
 var t *template.Template
 const DAY int64 = 60 * 60 * 24
-const INTERVAL float64 = 60 * 5
+const INTERVAL float64 = 60 * 5 // In seconds. Should match Cron Job
 const HOUR float64 = 60 * 60
-
-// Good enough
-const SQRT3OVER2 float64 = 0.86602540378 // math.Sqrt(3)/2
+const FOLLOWS int = 60
+const LIKES int = 100
+const MAX int = 5000
+const GRABCOUNT int = 50
+const MAXSTORES int = 1000
+const CALLS int = int(HOUR/INTERVAL)
+const MAXREQUESTS int = int(MAX/CALLS)
+const MAXPEOPLEGRAB int= int(MAXREQUESTS/GRABCOUNT)
+const SIXHOURS = HOUR * 6
 
 // Start er up!
 func init(){
     NewHandler("/", mainHandle)
-    NewHandler("/init", tagHandle)
+    NewHandler("/init", initHandle)
     NewHandler("/auth", authHandle)
     NewHandler("/process", processHandle)
 
     // For ML
     NewHandler("/learn", learningHandle)
+    NewHandler("/update", updateHandle)
+    NewHandler("/flush", flushHandle)
+    NewHandler("/flushhashtag", flushHashtagHandle)
 
     // For testing
     NewHandler("/tag", tagHandle)
@@ -45,6 +53,11 @@ func mainHandle(w http.ResponseWriter, r *http.Request, s *Session){
     }
 }
 
+// Handle takes care of auth. Just for clean url
+func initHandle(w http.ResponseWriter, r *http.Request, s *Session){
+    http.Redirect(w,r,"/",302)
+}
+
 func authHandle(w http.ResponseWriter, r *http.Request, s *Session){
     s.SetHashtags(strings.Split(r.URL.Query()["hashtags"][0]," "))
     s.SetAuth(r.URL.Query()["code"][0])
@@ -53,23 +66,18 @@ func authHandle(w http.ResponseWriter, r *http.Request, s *Session){
 
 func processHandle(w http.ResponseWriter, r *http.Request, s *Session){
 
-    // Grab intervals since day start 
-    now := time.Now().Unix()
-    intervals := int(float64(now % DAY) / INTERVAL)
+    // Grab intervals since day start
+    intervals := Intervals()
 
     // Had some fancy math for peroidictiy. But
     // we could just brute force 100 per hour
-    likes := int(100 / int(HOUR / INTERVAL))
-    if intervals % int(HOUR / INTERVAL) / (100 % int(HOUR / INTERVAL)) == 0 {
-        likes += 1
-    }
+    likes := int(LIKES / int(HOUR / INTERVAL))
+    Limit(&likes, intervals, LIKES)
 
-    // Round robin the hashtags. Allows for manual weighting eg: [#dog,#dog,#cute]
     if !s.Usable() {
         fmt.Fprint(w, "Please set hashtags and authorize")
         return
     }
-    posts := GetPosts(s,s.GetHashtag(intervals))
 
     // Follow ratio function where target is the desired
     // amount of followers.
@@ -79,37 +87,47 @@ func processHandle(w http.ResponseWriter, r *http.Request, s *Session){
     // decreasing function and some percentage of your
     // target feels right
     count := GetStatus(s)
-    follows := FollowerDecay(count,s.GetMagic(),s.GetTarget())
+    follows := int(FollowerDecay(count,s.GetMagic(),s.GetTarget()))
+    Limit(&follows, intervals, FOLLOWS)
 
     // Save status at midnight
     if intervals == 0 {
-        s.SetRecords(count)
+        go s.SetRecords(count)
     }
 
-    // Go from end to reduce collision
-    i := 19
-    for (likes > 0 || follows > 0) && i >= 0 {
-
-        // Process likes
-        if likes > 0 {
-            go LikePosts(s, posts.Data[i].Id)
-            likes--
-
-        // Doing this seperately reaches larger audience
-        // Never exceeds 12/11 at a given time
-        }else if follows > 0 {
-            go FollowUser(s, posts.Data[i].Id)
-            follows--
-        }
-
-        // Decrement
-        i--
-    }
+    BasicDecision(s, follows, likes, intervals)
 }
 
 // Learning handle. Majority of logic in sentience.go
 func learningHandle(w http.ResponseWriter, r *http.Request, s *Session){
-    fmt.Fprint(w, Learn(s))
+    // If we could do this without being charged $10bijallion we could remove the conditional
+    if IsLocal() {
+        fmt.Fprint(w, Learn(s))
+        return
+    }
+    fmt.Fprint(w,"Must be local")
+}
+
+// Flush handle to kill all ML data
+func flushHandle(w http.ResponseWriter, r *http.Request, s *Session){
+    s.Flush()
+    fmt.Fprint(w,  "Done Flushed")
+}
+// Flush handle to kill all ML data
+func flushHashtagHandle(w http.ResponseWriter, r *http.Request, s *Session){
+    go s.FlushEntity("Hashtag")
+    fmt.Fprint(w,  "Done Flushed")
+}
+
+func updateHandle(w http.ResponseWriter, r *http.Request, s *Session){
+    // Probs implement TOTP, potentially vulnerable to MTM
+    if s.VerifiedUpdate(r.URL.Query()["hash"][0]){
+        s.SetHashtags(strings.Split(r.URL.Query()["hashtags"][0]," "))
+        s.ParseTheta(strings.Split(r.URL.Query()["theta"][0]," "))
+        fmt.Fprint(w,  "Updated")
+    }else{
+        fmt.Fprint(w,  "Not Verified")        
+    }
 }
 
 // Just some testing endpoints

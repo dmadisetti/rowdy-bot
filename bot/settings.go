@@ -12,16 +12,16 @@ type Settings struct {
     Callback string
     Hashtags []string
 
-    // Learning States
-    Learning bool
-    Learned bool
-
     // Account Specific
     Id string
     Access_token string
+
+    // Bot Specific
+    Hash string
+    Production string
 }
 
-func NewSettings()*Settings{   
+func NewSettings()*Settings{
     return &Settings{
         Errored : false,
         Target  : 1000,

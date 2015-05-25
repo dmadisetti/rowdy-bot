@@ -26,6 +26,29 @@ Manage upon hitting the site or from the GAE datastore viewer
 
 ```
 
+To run the application checkout the toolbelt
+-----
+From `./toolbelt -h`:
+```
+    Why Hello there! You must be looking for help
+    
+    The Flags: 
+    r - run 
+    t - test 
+    d - deploy 
+    b - backup 
+    i - init fom backup 
+    s - setup
+    l - train model
+    p - ci push
+    c - clean
+    
+    Chain em together as you see fit 
+```
+
+To get started run `./toolbelt -sr`
+
+
 To set hashtags use the web interface
 -----
 ![Our simple web interface](https://raw.github.com/dmadisetti/rowdy-bot/master/example.png "Screenshot")

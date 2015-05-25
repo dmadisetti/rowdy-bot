@@ -12,6 +12,11 @@ handlers:
 - url: /_ah/remote_api
   script: _go_app
   login: admin
+
+# Update remotely and learning locally
+- url: /(update|learn)
+  script: _go_app
+
 - url: .*
   script: _go_app
   login: admin
