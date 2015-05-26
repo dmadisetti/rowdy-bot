@@ -1,17 +1,17 @@
 package tests
 
 import(
-	"../bot"
+	"../bot/utils"
 	"testing"
 )
 
 func TestComputeHmac256(t *testing.T){
 	// From instagram example
 	// http://instagram.com/developer/restrict-api-requests/
-	if bot.ComputeHmac256("200.15.1.1","6dc1787668c64c939929c17683d7cb74") != "7e3c45bc34f56fd8e762ee4590a53c8c2bbce27e967a85484712e5faa0191688"{
+	if utils.ComputeHmac256("200.15.1.1","6dc1787668c64c939929c17683d7cb74") != "7e3c45bc34f56fd8e762ee4590a53c8c2bbce27e967a85484712e5faa0191688"{
 		t.Fatalf("Single IP Hash Broken")
 	}
-	if bot.ComputeHmac256("200.15.1.1,131.51.1.35","6dc1787668c64c939929c17683d7cb74") != "13cb27eee318a5c88f4456bae149d806437fb37ba9f52fac0b1b7d8c234e6cee"{
+	if utils.ComputeHmac256("200.15.1.1,131.51.1.35","6dc1787668c64c939929c17683d7cb74") != "13cb27eee318a5c88f4456bae149d806437fb37ba9f52fac0b1b7d8c234e6cee"{
 		t.Fatalf("Multi IP Hash Broken")
 	}
 }
@@ -20,13 +20,12 @@ func TestFollowerDecay(t *testing.T){
 	// Set some test
 	magic := 0.75
 	target := int64(1000)
-	count :=bot.Counts {
-		Followed_by:target,
-		Follows: int64(float64(target) * magic),
-	}
+
+	followed_by := target
+	follows := int64(float64(target) * magic)
 
 	// By definition of Magic and Target, this should be true
-	if x := bot.FollowerDecay(count,magic,float64(target)); x != 0 {
+	if x := utils.FollowerDecay(followed_by,follows,magic,float64(target)); x != 0 {
 		t.Fatalf("Follower Decay is Broken",x)
 	}
 }
