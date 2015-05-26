@@ -166,11 +166,8 @@ func (session *Session) Share(){
     uri := session.settings.Production 
     uri += "/update"
     uri += "?hash=" + session.settings.Hash
-    tags := ""
-    for _,tag := range session.settings.Hashtags {
-        tags += tag + " "
-    }
-    uri += "&hashtags=" + url.QueryEscape(tags)
+
+    uri += "&hashtags=" + url.QueryEscape(strings.Join(session.settings.Hashtags," "))
 
     theta := utils.FloatToString(session.machine.Bias) + " "
     theta += utils.FloatToString(session.machine.Xfollowing) + " "
