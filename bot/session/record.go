@@ -18,12 +18,11 @@ type Record struct {
 func (s *Session) GetRecords() (records *Record){
     records = &Record{}
     err := datastore.Get(s.context,datastore.NewKey(s.context,"Records","",1, nil),records)
-    if err !=nil{
-        s.context.Infof("Records: %v",Saved)
+    if err == nil{
+        s.context.Infof("Records: %v","Saved")
         s.SaveRecords(records)
         return
     }
-    s.context.Infof("Error: %v", err)
     return
 }
 
