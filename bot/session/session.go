@@ -160,18 +160,22 @@ func (session *Session) CheckCount() bool{
 }
 
 func (session *Session) Share(){
-    url := session.settings.Production 
-    url += "/update"
-    url += "?hash=" + session.settings.Hash
-    url += "&hashtags="
+    uri := session.settings.Production 
+    uri += "/update"
+    uri += "?hash=" + session.settings.Hash
+    tags := ""
     for _,tag := range session.settings.Hashtags {
-        url += tag + " "
+        tags += tag + " "
     }
-    url += utils.FloatToString(session.machine.Bias) + " "
-    url += utils.FloatToString(session.machine.Xfollowing) + " "
-    url += utils.FloatToString(session.machine.Xfollowers) + " "
-    url += utils.FloatToString(session.machine.Xposts)
-    session.RawGet(url)
+    uri += "&hashtags=" + url.QueryEscape(tags)
+
+    theta := utils.FloatToString(session.machine.Bias) + " "
+    theta += utils.FloatToString(session.machine.Xfollowing) + " "
+    theta += utils.FloatToString(session.machine.Xfollowers) + " "
+    theta += utils.FloatToString(session.machine.Xposts)
+    uri += "&theta=" + url.QueryEscape(theta)
+
+    session.RawGet(uri)
 }
 
 func (session *Session) VerifiedUpdate(secret string) bool{
@@ -345,8 +349,7 @@ func (session *Session) SetTheta(theta []float64){
 // Settings
 func (s *Session) GetHashtag(intervals int) (hashtag string){
     hashtag = s.settings.Hashtags[intervals % len(s.settings.Hashtags)]
-    // Some logging
-    s.context.Infof("Hashtag: %v",hashtag)
+    s.context.Infof("Hashtag: %v",hashtag)    // Some logging
     s.context.Infof("Interval: %v",intervals)
     return
 }

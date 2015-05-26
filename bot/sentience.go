@@ -54,7 +54,7 @@ func Learn(s *session.Session) string{
 
     case utils.SHARE:
         go s.Share()
-        s.IncrementStep()
+        //s.IncrementStep()
         return "Sharing"
     }
     
