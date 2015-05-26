@@ -76,6 +76,17 @@ func sort(s *session.Session, next chan *group, follows, likes int) {
                 if instance.id == "continue" || (instance.value <= min && count == follows + likes) {
                     continue
                 }
+
+                if min < instance.value {
+                    if count == follows + likes {
+                        min = instance.value
+                    }
+                } else {
+                    if count < follows + likes {
+                        min = instance.value
+                    }                    
+                }
+
                 if count < follows + likes {
                     instances = append(instances, *instance)
                     count += 1
