@@ -5,21 +5,12 @@ import(
     "fmt"
     "strings"
     "html/template"
+    "bot/session"
+    "bot/utils"
+    bot "bot/http"
 )
 
 var t *template.Template
-const DAY int64 = 60 * 60 * 24
-const INTERVAL float64 = 60 * 5 // In seconds. Should match Cron Job
-const HOUR float64 = 60 * 60
-const FOLLOWS int = 60
-const LIKES int = 100
-const MAX int = 5000
-const GRABCOUNT int = 50
-const MAXSTORES int = 1000
-const CALLS int = int(HOUR/INTERVAL)
-const MAXREQUESTS int = int(MAX/CALLS)
-const MAXPEOPLEGRAB int= int(MAXREQUESTS/GRABCOUNT)
-const SIXHOURS = HOUR * 6
 
 // Start er up!
 func init(){
@@ -40,7 +31,7 @@ func init(){
 }
 
 // Handles
-func mainHandle(w http.ResponseWriter, r *http.Request, s *Session){
+func mainHandle(w http.ResponseWriter, r *http.Request, s *session.Session){
     t, e := template.ParseGlob("templates/the.html")
     if e != nil {
         fmt.Fprint(w, e)
@@ -54,25 +45,26 @@ func mainHandle(w http.ResponseWriter, r *http.Request, s *Session){
 }
 
 // Handle takes care of auth. Just for clean url
-func initHandle(w http.ResponseWriter, r *http.Request, s *Session){
+func initHandle(w http.ResponseWriter, r *http.Request, s *session.Session){
     http.Redirect(w,r,"/",302)
 }
 
-func authHandle(w http.ResponseWriter, r *http.Request, s *Session){
+func authHandle(w http.ResponseWriter, r *http.Request, s *session.Session){
     s.SetHashtags(strings.Split(r.URL.Query()["hashtags"][0]," "))
-    s.SetAuth(r.URL.Query()["code"][0])
+    bot.Authenticate(s,r.URL.Query()["code"][0])
+
     http.Redirect(w,r,"/",302)
 }
 
-func processHandle(w http.ResponseWriter, r *http.Request, s *Session){
+func processHandle(w http.ResponseWriter, r *http.Request, s *session.Session){
 
     // Grab intervals since day start
-    intervals := Intervals()
+    intervals := utils.Intervals()
 
     // Had some fancy math for peroidictiy. But
     // we could just brute force 100 per hour
-    likes := int(LIKES / int(HOUR / INTERVAL))
-    Limit(&likes, intervals, LIKES)
+    likes := int(utils.LIKES / utils.CALLS)
+    utils.Limit(&likes, intervals, utils.LIKES)
 
     if !s.Usable() {
         fmt.Fprint(w, "Please set hashtags and authorize")
@@ -86,22 +78,29 @@ func processHandle(w http.ResponseWriter, r *http.Request, s *Session){
     // we're doing this, but ultimately we just need a
     // decreasing function and some percentage of your
     // target feels right
-    count := GetStatus(s)
-    follows := int(FollowerDecay(count,s.GetMagic(),s.GetTarget()))
-    Limit(&follows, intervals, FOLLOWS)
+    count := bot.GetStatus(s)
+    follows := int(utils.FollowerDecay(count.Followed_by,count.Follows,s.GetMagic(),s.GetTarget()))
+    utils.Limit(&follows, intervals, utils.FOLLOWS)
+    if follows < 0 {
+        follows = 0
+    }
 
     // Save status at midnight
     if intervals == 0 {
-        go s.SetRecords(count)
+        go s.SetRecords(count.Followed_by,count.Follows)
     }
-
-    BasicDecision(s, follows, likes, intervals)
+    if s.GetLearnt(){
+        IntelligentDecision(s, follows, likes, intervals)
+    } else {
+        BasicDecision(s, follows, likes, intervals)
+    }
+    fmt.Fprint(w, "Processing")
 }
 
 // Learning handle. Majority of logic in sentience.go
-func learningHandle(w http.ResponseWriter, r *http.Request, s *Session){
+func learningHandle(w http.ResponseWriter, r *http.Request, s *session.Session){
     // If we could do this without being charged $10bijallion we could remove the conditional
-    if IsLocal() {
+    if utils.IsLocal() {
         fmt.Fprint(w, Learn(s))
         return
     }
@@ -109,21 +108,22 @@ func learningHandle(w http.ResponseWriter, r *http.Request, s *Session){
 }
 
 // Flush handle to kill all ML data
-func flushHandle(w http.ResponseWriter, r *http.Request, s *Session){
+func flushHandle(w http.ResponseWriter, r *http.Request, s *session.Session){
     s.Flush()
     fmt.Fprint(w,  "Done Flushed")
 }
 // Flush handle to kill all ML data
-func flushHashtagHandle(w http.ResponseWriter, r *http.Request, s *Session){
+func flushHashtagHandle(w http.ResponseWriter, r *http.Request, s *session.Session){
     go s.FlushEntity("Hashtag")
     fmt.Fprint(w,  "Done Flushed")
 }
 
-func updateHandle(w http.ResponseWriter, r *http.Request, s *Session){
+func updateHandle(w http.ResponseWriter, r *http.Request, s *session.Session){
     // Probs implement TOTP, potentially vulnerable to MTM
     if s.VerifiedUpdate(r.URL.Query()["hash"][0]){
         s.SetHashtags(strings.Split(r.URL.Query()["hashtags"][0]," "))
         s.ParseTheta(strings.Split(r.URL.Query()["theta"][0]," "))
+        s.SetLearnt()
         fmt.Fprint(w,  "Updated")
     }else{
         fmt.Fprint(w,  "Not Verified")        
@@ -131,14 +131,14 @@ func updateHandle(w http.ResponseWriter, r *http.Request, s *Session){
 }
 
 // Just some testing endpoints
-func tagHandle(w http.ResponseWriter, r *http.Request, s *Session){
-    tag := GetTag(s, r.URL.Query()["hashtag"][0])
+func tagHandle(w http.ResponseWriter, r *http.Request, s *session.Session){
+    tag := bot.GetTag(s, r.URL.Query()["hashtag"][0])
     fmt.Fprint(w, tag.Data.Media_count)
 }
 
 // Snoop Doggy Dog
 // http://127.0.0.1:8080/user?user=1574083
-func userHandle(w http.ResponseWriter, r *http.Request, s *Session){
-    user := GetUser(s, r.URL.Query()["user"][0])
+func userHandle(w http.ResponseWriter, r *http.Request, s *session.Session){
+    user := bot.GetUser(s, r.URL.Query()["user"][0])
     fmt.Fprint(w, user.Data.Counts.Followed_by)
 }

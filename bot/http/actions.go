@@ -1,4 +1,4 @@
-package bot
+package http
 
 import(
     "log"
@@ -6,12 +6,30 @@ import(
     "io/ioutil"
     "net/url"
     "encoding/json"
+    "bot/session"
+    "bot/utils"
 )
 
 // Could dynamically build these, but naw
 
+// Authenticate
+func Authenticate(s *session.Session, code string){
+    decoder := s.Auth(code)
+ 
+    //Decode request
+    var auth Auth
+    err := decoder.Decode(&auth)
+    if err != nil {
+        panic(err)
+    }
+
+    s.SetAuth(auth.Access_token, auth.User.Id)
+
+}
+
+
 // Get actions
-func GetStatus(s *Session) (count Counts){
+func GetStatus(s *session.Session) (count Counts){
 
     response,err := s.Get("https://api.instagram.com/v1/users/" + s.GetId())
     if err != nil {
@@ -30,8 +48,8 @@ func GetStatus(s *Session) (count Counts){
     return
 }
 
-func GetMedia(s *Session, id string) Posts{
-    params := map[string]string{"MIN_TIMESTAMP":SixHoursAgo(),"COUNT":"3"}
+func GetMedia(s *session.Session, id string) Posts{
+    params := map[string]string{"MIN_TIMESTAMP":utils.SixHoursAgo(),"COUNT":"3"}
     response,err := s.GetParamed("https://api.instagram.com/v1/users/"+id+"/media/recent/", params)
     if err != nil {
         panic(err)
@@ -48,7 +66,7 @@ func GetMedia(s *Session, id string) Posts{
     return posts
 }
 
-func GetPosts(s *Session, hashtag string) Posts{
+func GetPosts(s *session.Session, hashtag string) Posts{
 
     response,err := s.Get("https://api.instagram.com/v1/tags/" + hashtag +"/media/recent")
     if err != nil {
@@ -68,7 +86,7 @@ func GetPosts(s *Session, hashtag string) Posts{
     return posts
 }
 
-func GetUser(s *Session, id string) User{
+func GetUser(s *session.Session, id string) User{
     log.Println(id)
     response,err := s.Get("https://api.instagram.com/v1/users/" + id)
     if err != nil {
@@ -88,7 +106,7 @@ func GetUser(s *Session, id string) User{
 }
 
 
-func GetTag(s *Session, hashtag string) Tag{
+func GetTag(s *session.Session, hashtag string) Tag{
 
     response,err := s.Get("https://api.instagram.com/v1/tags/" + hashtag)
     if err != nil {
@@ -107,7 +125,7 @@ func GetTag(s *Session, hashtag string) Tag{
 
 }
 
-func GetNext(s *Session, url string) Users{
+func GetNext(s *session.Session, url string) Users{
     log.Println(url)
     response,err := s.RawGet(url)
     if err != nil {
@@ -128,7 +146,28 @@ func GetNext(s *Session, url string) Users{
     return bunch
 }
 
-func getPeople(s *Session, url string) (users Users){
+func GetNextPost(s *session.Session, url string) Posts{
+    log.Println(url)
+    response,err := s.RawGet(url)
+    if err != nil {
+        panic(err)
+    }
+
+    //Decode request
+    var bunch Posts
+    data, err := ioutil.ReadAll(response.Body)
+    if err == nil && data != nil {
+        err = json.Unmarshal(data, &bunch)
+    }
+    if err != nil {
+        log.Println(string(data[:]))
+        panic(err)
+    }
+
+    return bunch
+}
+
+func getPeople(s *session.Session, url string) (users Users){
     response,err := s.Get(url)
     if err != nil {
         panic(err)
@@ -146,27 +185,43 @@ func getPeople(s *Session, url string) (users Users){
     return
 }
 
-func GetFollowing(s *Session) Users{
+func GetFollowing(s *session.Session) Users{
     return getPeople(s, "https://api.instagram.com/v1/users/" + s.GetId() +"/follows")
 }
 
-func GetFollowers(s *Session) Users{
+func GetFollowers(s *session.Session) Users{
     return getPeople(s, "https://api.instagram.com/v1/users/" + s.GetId() +"/followed-by")
 }
 
+func IsFollowing(s *session.Session, id string) bool {
+    log.Println("https://api.instagram.com/v1/users/"+id+"/relationship")
+    response ,err := s.Get("https://api.instagram.com/v1/users/"+id+"/relationship")
+    if err != nil {
+        panic(err)
+    }
+
+    var status Status
+    decoder := json.NewDecoder(response.Body)
+    err = decoder.Decode(&status)
+    if err != nil {
+        panic(err)
+    }
+
+    return status.Data.Outgoing_status == "follows"
+}
 
 // Post actions
-func LikePosts(s *Session, id string) {
+func LikePosts(s *session.Session, id string) {
     v := url.Values{}
 
     response ,err := s.Post("https://api.instagram.com/v1/media/"+id+"/likes",v)
     if err != nil {
         panic(err)
     }
-    log.Println(response)
+    s.Warn(response.StatusCode)
 }
 
-func FollowUser(s *Session, id string){
+func FollowUser(s *session.Session, id string){
     v := url.Values{}
     v.Set("action", "follow")
 
@@ -174,5 +229,5 @@ func FollowUser(s *Session, id string){
     if err != nil {
         panic(err)
     }
-    log.Println(response)
+    s.Warn(response.StatusCode)
 }

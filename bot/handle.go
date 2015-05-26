@@ -5,15 +5,16 @@ import (
     "net/http"
     "net/url"
     "fmt"
+    "bot/session"
 )
 
 // Handler just to hold everything together
 type Handler struct{
-    handle func(http.ResponseWriter, *http.Request, *Session)
+    handle func(http.ResponseWriter, *http.Request, *session.Session)
 }
 
 // Constructor
-func NewHandler(path string, handle func(http.ResponseWriter, *http.Request, *Session)) {
+func NewHandler(path string, handle func(http.ResponseWriter, *http.Request, *session.Session)) {
     handler := &Handler{handle:handle}
     http.HandleFunc(path, handler.preHandle)
 }
@@ -22,14 +23,14 @@ func NewHandler(path string, handle func(http.ResponseWriter, *http.Request, *Se
 func (h *Handler)preHandle(w http.ResponseWriter, r *http.Request){
 
     // Create session
-    session := NewSession(r)
+    s := session.NewSession(r)
 
     // get session from data store or create and prompt config
-    if !session.LoadSettings() {
+    if !s.LoadSettings() {
         if keys, ok := parseKeys(r); ok{
-            session.InitAuth(keys["client_id"][0],keys["client_secret"][0],keys["callback"][0],keys["hash"][0])
+            s.InitAuth(keys["client_id"][0],keys["client_secret"][0],keys["callback"][0],keys["hash"][0])
         } else {
-            session.Save()
+            s.Save()
             t, e := template.ParseGlob("templates/setup.html")
             if e != nil {
                 fmt.Fprint(w, e)
@@ -37,7 +38,7 @@ func (h *Handler)preHandle(w http.ResponseWriter, r *http.Request){
             }
 
             // render with records
-            err := t.Execute(w, session)
+            err := t.Execute(w, s)
             if err !=nil{
                 panic(err)
             }
@@ -45,12 +46,12 @@ func (h *Handler)preHandle(w http.ResponseWriter, r *http.Request){
         }
     }
 
-    if !session.LoadMachine() {
-        session.Save()
+    if !s.LoadMachine() {
+        s.Save()
     }
 
     // Call handler set earlier
-    h.handle(w, r, session)
+    h.handle(w, r, s)
 }
 
 func parseKeys(r *http.Request)(url.Values, bool){

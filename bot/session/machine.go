@@ -1,13 +1,6 @@
-package bot
+package session
 
-// Process Steps
-const APPRAISE int = 0
-const SCORN int = 1
-const BUILD int = 2
-const GOODTAGS int = 3
-const BADTAGS int = 4
-const COMPUTETAGS int = 5
-const SHARE int = 6
+import "bot/utils"
 
 type Machine struct {
 
@@ -48,7 +41,7 @@ func NewMachine() *Machine{
     return &Machine{
         Learning : false,
         Learned : false,
-        Step : APPRAISE,
+        Step : utils.APPRAISE,
         FollowingCalls : 0,
         FollowerCalls : 0,
         HashtagCalls : 0,
@@ -65,17 +58,17 @@ func NewMachine() *Machine{
 func (m *Machine) SetLimits(following int, followers int){
 
     // Limits by calls
-    m.FollowingCalls = int(following/MAXREQUESTS) + 1
-    m.FollowerCalls  = int(followers/MAXREQUESTS) + 1
+    m.FollowingCalls = int(following/utils.MAXREQUESTS) + 1
+    m.FollowerCalls  = int(followers/utils.MAXREQUESTS) + 1
     m.HashtagCalls   = m.FollowerCalls + m.FollowerCalls
 
 }
 
 func (m *Machine) GetLimit() int {
     switch m.Step {
-    case APPRAISE:
+    case utils.APPRAISE:
         return m.FollowerCalls
-    case SCORN:
+    case utils.SCORN:
         return m.FollowingCalls
     default:
         return m.HashtagCalls

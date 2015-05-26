@@ -1,4 +1,4 @@
-package bot
+package session
 
 import (
     "appengine/datastore"
@@ -24,13 +24,13 @@ func (s *Session) GetRecords() (records *Record){
     return
 }
 
-func (s *Session) SetRecords(count Counts) {
+func (s *Session) SetRecords(follows, followed_by int64) {
 
     now := time.Now()
 
     t := strconv.FormatInt(now.Unix(),10)
-    x := strconv.FormatInt(count.Follows,10)
-    y := strconv.FormatInt(count.Followed_by,10)
+    x := strconv.FormatInt(follows,10)
+    y := strconv.FormatInt(followed_by,10)
 
     records := s.GetRecords()
     records.String += ",[" + t + ","+ x +","+ y +"]"

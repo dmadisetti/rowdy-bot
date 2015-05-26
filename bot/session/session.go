@@ -1,4 +1,4 @@
-package bot
+package session
 
 // Session getting big. 
 // Might be a good idea
@@ -15,6 +15,7 @@ import (
     "net/http"
     "net/url"
     "strings"
+    "bot/utils"
 )
 
 type Session struct {
@@ -76,7 +77,7 @@ func (session *Session) GetHashtagCursor() *datastore.Iterator{
 
 func (session *Session) SetTopTags(){
     var hashtags []Hashtag
-    datastore.NewQuery("Hashtag").Limit(CALLS).Order("-Value").GetAll(session.context, &hashtags)
+    datastore.NewQuery("Hashtag").Limit(utils.CALLS).Order("-Value").GetAll(session.context, &hashtags)
     var tags []string
     for _, hashtag := range hashtags {
         tags = append(tags,hashtag.Name)
@@ -151,7 +152,11 @@ func (session *Session) IncrementCount(){
 
 func (session *Session) FinishedCount() bool{
     session.processed += 1
-    return session.processed == session.count
+    return session.processed >= session.count
+}
+
+func (session *Session) CheckCount() bool{
+    return session.processed >= session.count
 }
 
 func (session *Session) Share(){
@@ -162,10 +167,10 @@ func (session *Session) Share(){
     for _,tag := range session.settings.Hashtags {
         url += tag + ","
     }
-    url += FloatToString(session.machine.Bias) + " "
-    url += FloatToString(session.machine.Xfollowing) + " "
-    url += FloatToString(session.machine.Xfollowers) + " "
-    url += FloatToString(session.machine.Xposts) + " "
+    url += utils.FloatToString(session.machine.Bias) + " "
+    url += utils.FloatToString(session.machine.Xfollowing) + " "
+    url += utils.FloatToString(session.machine.Xfollowers) + " "
+    url += utils.FloatToString(session.machine.Xposts) + " "
     session.RawGet(url)
 }
 
@@ -189,6 +194,9 @@ func (session *Session) InitAuth(client_id, client_secret, callback, hash string
 }
 
 // Machine helpers
+func (s *Session) Warn(code int){
+    s.context.Warningf("Bad Code: %v",code)
+}
 func (session *Session) IncrementStep(){
     session.machine.Step += 1
     session.machine.Status = 0
@@ -211,7 +219,7 @@ func (session *Session) IncrementSize(size int, positive bool) {
 
 // HTTP functions
 func (session *Session) Get(uri string) (*http.Response, error){
-    request,err := http.NewRequest("GET", uri +"?client_id=" + session.settings.Client_id, nil)
+    request,err := http.NewRequest("GET", uri +"?access_token="+ session.settings.Access_token +"&client_id=" + session.settings.Client_id, nil)
     if err != nil {
         panic(err)
     }
@@ -253,7 +261,7 @@ func (session *Session) Post(uri string, v url.Values) (*http.Response, error){
 }
 
 // Might be better breaking into actions
-func (session *Session) SetAuth(code string){
+func (session *Session) Auth(code string) *json.Decoder{
 
     v := url.Values{}
     v.Set("client_id",session.settings.Client_id)
@@ -272,19 +280,18 @@ func (session *Session) SetAuth(code string){
 
     session.Sign(*request)
     response,err := session.client.Do(request)
-
-    //Decode request
-    var auth Auth
-    decoder := json.NewDecoder(response.Body)
-    err = decoder.Decode(&auth)
     if err != nil {
         panic(err)
     }
 
-    session.context.Infof("Response: %v",response)
+    decoder := json.NewDecoder(response.Body)
+    return decoder
+}
 
-    session.settings.Access_token = auth.Access_token
-    session.settings.Id = auth.User.Id
+// Might be better breaking into actions
+func (session *Session) SetAuth(token, id string){
+    session.settings.Access_token = token
+    session.settings.Id = id
     session.SaveSettings()
 }
 
@@ -306,6 +313,10 @@ func (session *Session) SetLearning() bool{
     session.SaveMachine()
     return !set
 }
+func (session *Session) SetLearnt(){
+    session.machine.Learned = true
+    session.SaveMachine()
+}
 func (session *Session) SetLimits(followers, following int){
     session.machine.SetLimits(followers, following)
     session.SaveMachine()
@@ -316,10 +327,10 @@ func (session *Session) SetNext(next string){
 }
 func (session *Session) ParseTheta(theta []string){
     session.SetTheta([]float64{
-        StringToFloat(theta[0]),
-        StringToFloat(theta[1]),
-        StringToFloat(theta[2]),
-        StringToFloat(theta[3]),
+        utils.StringToFloat(theta[0]),
+        utils.StringToFloat(theta[1]),
+        utils.StringToFloat(theta[2]),
+        utils.StringToFloat(theta[3]),
     })
 }
 func (session *Session) SetTheta(theta []float64){
@@ -354,7 +365,9 @@ func (s *Session) GetTarget() float64 {
 func (session *Session) GetLimit() int{
     return session.machine.GetLimit()
 }
-
+func (session *Session) GetLearnt() bool{
+    return session.machine.Learned
+}
 func (session *Session) GetLearningStep() int{
     return session.machine.Step
 }
@@ -376,6 +389,14 @@ func (session *Session) GetHashtagSize(positive bool) float64{
     }
     return float64(session.machine.BadSize)
 }
+func (session *Session) GetTheta() []float64{
+    return []float64{
+        -session.machine.Bias,
+        -session.machine.Xfollowers,
+        -session.machine.Xfollowing,
+        -session.machine.Xposts,
+    }
+}
 
 // For rendering
 func (s *Session) GetAuthLink() string{
@@ -393,5 +414,5 @@ func (s *Session) Authenticate(v url.Values){
 
 func (s *Session) Sign(request http.Request){
     ip := "127.0.0.1"
-    request.Header.Set("X-Insta-Forwarded-For", ip + "|" + ComputeHmac256(ip, s.settings.Client_secret))
+    request.Header.Set("X-Insta-Forwarded-For", ip + "|" + utils.ComputeHmac256(ip, s.settings.Client_secret))
 }

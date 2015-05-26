@@ -1,4 +1,4 @@
-package bot
+package session
 
 type Settings struct {
 

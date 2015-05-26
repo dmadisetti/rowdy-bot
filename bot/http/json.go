@@ -1,4 +1,4 @@
-package bot
+package http
 
 type Counts struct {
     Follows int64
@@ -15,6 +15,7 @@ type Data struct {
     Counts Counts
     Media_count int64
     Username string
+    Outgoing_status string
 }
 
 type Status struct {
@@ -39,6 +40,7 @@ type Auth struct {
 
 type Post struct {
     Id string // Can parse apart for user
+    User User
     Tags []string
 }
 
