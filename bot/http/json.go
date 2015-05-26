@@ -42,6 +42,7 @@ type Post struct {
     Id string // Can parse apart for user
     User User
     Tags []string
+    User_has_liked bool
 }
 
 type Posts struct {

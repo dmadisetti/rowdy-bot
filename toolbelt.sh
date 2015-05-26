@@ -42,7 +42,7 @@ try(){
 }
 
 deploy(){
-    echo $PASSWORD | go_appengine/appcfg.py --no_cookies --email=$EMAIL --noauth_local_webserver --passin update ./
+    echo $PASSWORD | go_appengine/appcfg.py --no_cookies --email=$EMAIL --passin update ./
 }
 
 backup(){

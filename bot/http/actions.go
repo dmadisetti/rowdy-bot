@@ -159,6 +159,7 @@ func GetNextPost(s *session.Session, url string) Posts{
     if err == nil && data != nil {
         err = json.Unmarshal(data, &bunch)
     }
+    log.Println(string(data[:]))
     if err != nil {
         log.Println(string(data[:]))
         panic(err)

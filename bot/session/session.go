@@ -120,8 +120,7 @@ func (session *Session) PutPerson(person Person, id string){
 func (session *Session) Flush(){
     session.FlushEntity("Person")
     session.FlushEntity("Hashtag")
-
-    memcache.Flush(session.context)
+    session.FlushCache()
 
     session.machine = NewMachine()
     session.SaveMachine()
@@ -130,6 +129,10 @@ func (session *Session) FlushEntity(entity string){
     keys, _ := datastore.NewQuery(entity).KeysOnly().GetAll(session.context,nil)
     datastore.DeleteMulti(session.context, keys)
 }
+func (session *Session) FlushCache(){
+    memcache.Flush(session.context)
+}
+
 
 // Cache
 func (session *Session) CheckCache(id string) bool{
@@ -391,10 +394,10 @@ func (session *Session) GetHashtagSize(positive bool) float64{
 }
 func (session *Session) GetTheta() []float64{
     return []float64{
-        -session.machine.Bias,
-        -session.machine.Xfollowers,
-        -session.machine.Xfollowing,
-        -session.machine.Xposts,
+        session.machine.Bias,
+        session.machine.Xfollowers,
+        session.machine.Xfollowing,
+        session.machine.Xposts,
     }
 }
 

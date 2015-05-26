@@ -38,13 +38,15 @@ func IntelligentDecision(s *session.Session, follows int, likes int, intervals i
     posts := http.GetPosts(s,s.GetHashtag(intervals))
     next := make(chan *http.Posts)
     grp := make(chan *group)
-    go sort(s, grp, follows, likes)
-    go listen(s, grp, next, 0)
+    count := 0
+    calls := 0
+    go sort(s, grp, follows, likes, &calls, &count)
+    go listen(s, grp, next, &calls, &count)
     next <- &posts
 }
 
 // Async heapsort, hope it works
-func sort(s *session.Session, next chan *group, follows, likes int) {
+func sort(s *session.Session, next chan *group, follows, likes int, calls, total *int) {
     var instances []group
     count := 0
     x := 0
@@ -55,12 +57,12 @@ func sort(s *session.Session, next chan *group, follows, likes int) {
 
                 x++
                 // Catches up and thus done
-                if x == utils.MAXPOSTGRAB * 20 || (min == 0 && count == follows + likes) {
+                if x == *total && *calls == utils.MAXPOSTGRAB {
                     i := 0
                     for (likes > 0 || follows > 0){
 
                         // Highest value for follows then do likes
-                        if follows > 0 {
+                        if follows > 0 {                            
                             go http.FollowUser(s, instances[i].id)
                             follows--
                         }else if likes > 0 {
@@ -69,6 +71,7 @@ func sort(s *session.Session, next chan *group, follows, likes int) {
                         }
                         i++
                     }
+                    s.FlushCache()
                     close(next)
                     return
                 }
@@ -111,19 +114,21 @@ func sort(s *session.Session, next chan *group, follows, likes int) {
 type group struct {
     value float64
     id string
+    user string
 }
 
 // Async set up multi calls
-func listen(s *session.Session,grp chan *group, next chan *http.Posts, calls int) {
+func listen(s *session.Session,grp chan *group, next chan *http.Posts, calls, count *int) {
     for {
         select {
             case posts := <-next:
 
                 i := len(posts.Data) - 1
+                *count += len(posts.Data)
                 go process(s, posts, i, grp)
 
                 close(next)
-                if calls == utils.MAXPOSTGRAB || posts.Pagination.Next_url == "" {
+                if *calls == utils.MAXPOSTGRAB || posts.Pagination.Next_url == "" {
                     return
                 }
 
@@ -131,7 +136,8 @@ func listen(s *session.Session,grp chan *group, next chan *http.Posts, calls int
                 nxt := make(chan *http.Posts)
                 batch = http.GetNextPost(s, posts.Pagination.Next_url)
 
-                go listen(s, grp, nxt, calls + 1)
+                *calls += 1
+                go listen(s, grp, nxt, calls, count)
                 nxt <- &batch
                 return
         }
@@ -142,11 +148,13 @@ func process(s *session.Session, posts *http.Posts, i int, grp chan *group){
     for i >= 0 {
 
         id := strings.Split(posts.Data[i].Id,"_")[1]
-        if http.IsFollowing(s,id){
+        if posts.Data[i].User_has_liked || s.CheckCache(id) || http.IsFollowing(s,id){
+            // Try to add to channel and stop if done
             grp <- &group{
                 id:"continue",
-            }            
-            return
+            }
+            i--
+            continue
         }
         user  := http.GetUser(s, id)
         // Create perosn to get value
@@ -159,6 +167,7 @@ func process(s *session.Session, posts *http.Posts, i int, grp chan *group){
         grp <- &group{
             id:id,
             value: person.Sigmoid(s.GetTheta()),
+            user: posts.Data[i].User.Username,
         }
 
         i--
