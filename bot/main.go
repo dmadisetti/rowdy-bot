@@ -7,7 +7,7 @@ import(
     "html/template"
     "bot/session"
     "bot/utils"
-    bot "bot/http"
+    action "bot/http"
 )
 
 var t *template.Template
@@ -51,7 +51,7 @@ func initHandle(w http.ResponseWriter, r *http.Request, s *session.Session){
 
 func authHandle(w http.ResponseWriter, r *http.Request, s *session.Session){
     s.SetHashtags(strings.Split(r.URL.Query()["hashtags"][0]," "))
-    bot.Authenticate(s,r.URL.Query()["code"][0])
+    action.Authenticate(s,r.URL.Query()["code"][0])
 
     http.Redirect(w,r,"/",302)
 }
@@ -78,7 +78,7 @@ func processHandle(w http.ResponseWriter, r *http.Request, s *session.Session){
     // we're doing this, but ultimately we just need a
     // decreasing function and some percentage of your
     // target feels right
-    count := bot.GetStatus(s)
+    count := action.GetStatus(s)
     follows := int(utils.FollowerDecay(count.Followed_by,count.Follows,s.GetMagic(),s.GetTarget()))
     utils.Limit(&follows, intervals, utils.FOLLOWS)
     if follows < 0 {
@@ -132,13 +132,13 @@ func updateHandle(w http.ResponseWriter, r *http.Request, s *session.Session){
 
 // Just some testing endpoints
 func tagHandle(w http.ResponseWriter, r *http.Request, s *session.Session){
-    tag := bot.GetTag(s, r.URL.Query()["hashtag"][0])
+    tag := action.GetTag(s, r.URL.Query()["hashtag"][0])
     fmt.Fprint(w, tag.Data.Media_count)
 }
 
 // Snoop Doggy Dog
 // http://127.0.0.1:8080/user?user=1574083
 func userHandle(w http.ResponseWriter, r *http.Request, s *session.Session){
-    user := bot.GetUser(s, r.URL.Query()["user"][0])
+    user := action.GetUser(s, r.URL.Query()["user"][0])
     fmt.Fprint(w, user.Data.Counts.Followed_by)
 }

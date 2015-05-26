@@ -38,6 +38,7 @@ try(){
     ln -sf `pwd`/bot go_appengine/goroot/src/;
     ./go_appengine/goapp build ./bot || exit 1;
     ./go_appengine/goapp test ./tests;
+    rm `pwd`/go_appengine/goroot/src/bot;
 }
 
 deploy(){
