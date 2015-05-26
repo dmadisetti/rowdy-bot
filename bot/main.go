@@ -85,15 +85,20 @@ func processHandle(w http.ResponseWriter, r *http.Request, s *session.Session){
         follows = 0
     }
 
+    // Hang on channel otherwise jobs cut out
+    done := make(chan bool)
+
     // Save status at midnight
     if intervals == 0 {
         go s.SetRecords(count.Followed_by,count.Follows)
     }
     if s.GetLearnt(){
-        IntelligentDecision(s, follows, likes, intervals)
+        IntelligentDecision(s, follows, likes, intervals, done)
     } else {
-        BasicDecision(s, follows, likes, intervals)
+        BasicDecision(s, follows, likes, intervals, done)
     }
+    // Wait for finish. Defeats the purpose of aysnc, but only way to run in prod
+    <-done
     fmt.Fprint(w, "Processing")
 }
 

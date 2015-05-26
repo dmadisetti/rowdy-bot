@@ -7,7 +7,7 @@ import(
     "strings"
 )
 
-func BasicDecision(s *session.Session, follows int, likes int, intervals int){
+func BasicDecision(s *session.Session, follows int, likes int, intervals int, done chan bool){
     // Round robin the hashtags. Allows for manual weighting eg: [#dog,#dog,#cute] 
     posts := http.GetPosts(s,s.GetHashtag(intervals))
 
@@ -30,9 +30,12 @@ func BasicDecision(s *session.Session, follows int, likes int, intervals int){
         // Decrement
         i--
     }
+
+    // Indicate doneness
+    done <- true
 }
 
-func IntelligentDecision(s *session.Session, follows int, likes int, intervals int) {
+func IntelligentDecision(s *session.Session, follows int, likes int, intervals int,  done chan bool) {
 
     // Still do round robin, but this time the hashtags are smart
     posts := http.GetPosts(s,s.GetHashtag(intervals))
@@ -40,13 +43,13 @@ func IntelligentDecision(s *session.Session, follows int, likes int, intervals i
     grp := make(chan *group)
     count := 0
     calls := 0
-    go sort(s, grp, follows, likes, &calls, &count)
+    go sort(s, grp, follows, likes, &calls, &count, done)
     go listen(s, grp, next, &calls, &count)
     next <- &posts
 }
 
 // Async heapsort, hope it works
-func sort(s *session.Session, next chan *group, follows, likes int, calls, total *int) {
+func sort(s *session.Session, next chan *group, follows, likes int, calls, total *int, done chan bool) {
     var instances []group
     count := 0
     x := 0
@@ -63,15 +66,16 @@ func sort(s *session.Session, next chan *group, follows, likes int, calls, total
 
                         // Highest value for follows then do likes
                         if follows > 0 {                            
-                            go http.FollowUser(s, instances[i].id)
+                            //http.FollowUser(s, instances[i].id)
                             follows--
                         }else if likes > 0 {
-                            go http.LikePosts(s, instances[i].id)
+                            //http.LikePosts(s, instances[i].id)
                             likes--
                         }
                         i++
                     }
                     s.FlushCache()
+                    done <- true
                     close(next)
                     return
                 }
@@ -118,7 +122,7 @@ type group struct {
 }
 
 // Async set up multi calls
-func listen(s *session.Session,grp chan *group, next chan *http.Posts, calls, count *int) {
+func listen(s *session.Session, grp chan *group, next chan *http.Posts, calls, count *int) {
     for {
         select {
             case posts := <-next:

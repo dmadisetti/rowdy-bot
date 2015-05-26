@@ -1,7 +1,6 @@
 package http
 
 import(
-    "log"
     "strings"
     "io/ioutil"
     "net/url"
@@ -73,8 +72,6 @@ func GetPosts(s *session.Session, hashtag string) Posts{
         panic(err)
     }
 
-    log.Println(response)
-
     //Decode request
     var posts Posts
     decoder := json.NewDecoder(response.Body)
@@ -87,7 +84,6 @@ func GetPosts(s *session.Session, hashtag string) Posts{
 }
 
 func GetUser(s *session.Session, id string) User{
-    log.Println(id)
     response,err := s.Get("https://api.instagram.com/v1/users/" + id)
     if err != nil {
         panic(err)
@@ -126,7 +122,6 @@ func GetTag(s *session.Session, hashtag string) Tag{
 }
 
 func GetNext(s *session.Session, url string) Users{
-    log.Println(url)
     response,err := s.RawGet(url)
     if err != nil {
         panic(err)
@@ -139,7 +134,7 @@ func GetNext(s *session.Session, url string) Users{
         err = json.Unmarshal(data, &bunch)
     }
     if err != nil {
-        log.Println(string(data[:]))
+        s.Log(string(data[:]))
         panic(err)
     }
 
@@ -147,7 +142,6 @@ func GetNext(s *session.Session, url string) Users{
 }
 
 func GetNextPost(s *session.Session, url string) Posts{
-    log.Println(url)
     response,err := s.RawGet(url)
     if err != nil {
         panic(err)
@@ -159,9 +153,8 @@ func GetNextPost(s *session.Session, url string) Posts{
     if err == nil && data != nil {
         err = json.Unmarshal(data, &bunch)
     }
-    log.Println(string(data[:]))
     if err != nil {
-        log.Println(string(data[:]))
+        s.Log(string(data[:]))
         panic(err)
     }
 
@@ -179,7 +172,7 @@ func getPeople(s *session.Session, url string) (users Users){
         err = json.Unmarshal(data, &users)
     }
     if err != nil {
-        log.Println(string(data[:]))
+        s.Log(string(data[:]))
         panic(err)
     }
 
@@ -195,7 +188,6 @@ func GetFollowers(s *session.Session) Users{
 }
 
 func IsFollowing(s *session.Session, id string) bool {
-    log.Println("https://api.instagram.com/v1/users/"+id+"/relationship")
     response ,err := s.Get("https://api.instagram.com/v1/users/"+id+"/relationship")
     if err != nil {
         panic(err)

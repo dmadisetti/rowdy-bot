@@ -353,6 +353,9 @@ func (s *Session) GetHashtag(intervals int) (hashtag string){
     s.context.Infof("Interval: %v",intervals)
     return
 }
+func (s *Session) Log(message string){
+    s.context.Errorf("Error: %v", message)
+}
 func (s *Session) GetId() string{
     return s.settings.Id
 }
