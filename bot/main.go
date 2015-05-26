@@ -86,9 +86,9 @@ func processHandle(w http.ResponseWriter, r *http.Request, s *session.Session){
     }
 
     // Save status at midnight
-    //if intervals == 0 {
-    go s.SetRecords(count.Followed_by,count.Follows)
-    //}
+    if intervals == 0 {
+        go s.SetRecords(count.Followed_by,count.Follows)
+    }
     if s.GetLearnt(){
         IntelligentDecision(s, follows, likes, intervals)
     } else {
