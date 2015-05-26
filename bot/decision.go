@@ -66,10 +66,10 @@ func sort(s *session.Session, next chan *group, follows, likes int, calls, total
 
                         // Highest value for follows then do likes
                         if follows > 0 {                            
-                            //http.FollowUser(s, instances[i].id)
+                            go http.FollowUser(s, instances[i].id)
                             follows--
                         }else if likes > 0 {
-                            //http.LikePosts(s, instances[i].id)
+                            go http.LikePosts(s, instances[i].id)
                             likes--
                         }
                         i++
@@ -169,7 +169,7 @@ func process(s *session.Session, posts *http.Posts, i int, grp chan *group){
         }
 
         grp <- &group{
-            id:id,
+            id:posts.Data[i].Id,
             value: person.Sigmoid(s.GetTheta()),
             user: posts.Data[i].User.Username,
         }

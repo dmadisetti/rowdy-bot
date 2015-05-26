@@ -211,7 +211,7 @@ func LikePosts(s *session.Session, id string) {
     if err != nil {
         panic(err)
     }
-    s.Warn(response.StatusCode)
+    s.Log(string(response.StatusCode))
 }
 
 func FollowUser(s *session.Session, id string){
@@ -222,5 +222,5 @@ func FollowUser(s *session.Session, id string){
     if err != nil {
         panic(err)
     }
-    s.Warn(response.StatusCode)
+    s.Log(string(response.StatusCode))
 }
