@@ -19,7 +19,7 @@ show_help(){
     "
 }
 
-APP_ID=rowdy-bot
+APP_ID=rowdybot
 current_datetime=$(date '+%Y%m%d_%H%M%S')
 filename="backup_$current_datetime.txt"
 
@@ -42,7 +42,9 @@ try(){
 }
 
 deploy(){
-    echo $PASSWORD | go_appengine/appcfg.py --email=$EMAIL --noauth_local_webserver --passin update ./
+    echo $PASSWORD
+    echo $EMAIL
+    echo $PASSWORD | go_appengine/appcfg.py --no_cookies --email=$EMAIL --passin update ./
 }
 
 backup(){
@@ -62,6 +64,7 @@ push(){
 
 clean(){
     rm -rf go_appengine*;
+    rm _go_manifest.txt;
     rm bulkloader*;
 }
 

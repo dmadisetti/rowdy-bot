@@ -61,10 +61,10 @@ func sort(s *session.Session, next chan *group, follows, likes int) {
 
                         // Highest value for follows then do likes
                         if follows > 0 {
-                            //go http.FollowUser(s, instances[i].id)
+                            go http.FollowUser(s, instances[i].id)
                             follows--
                         }else if likes > 0 {
-                            //go http.LikePosts(s, instances[i].id)
+                            go http.LikePosts(s, instances[i].id)
                             likes--
                         }
                         i++

@@ -1,5 +1,5 @@
 application: rowdy-bot
-version: 1-1
+version: 1-2
 runtime: go
 api_version: go1
 
