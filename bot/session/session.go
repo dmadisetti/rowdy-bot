@@ -165,12 +165,12 @@ func (session *Session) Share(){
     url += "?hash=" + session.settings.Hash
     url += "&hashtags="
     for _,tag := range session.settings.Hashtags {
-        url += tag + ","
+        url += tag + " "
     }
     url += utils.FloatToString(session.machine.Bias) + " "
     url += utils.FloatToString(session.machine.Xfollowing) + " "
     url += utils.FloatToString(session.machine.Xfollowers) + " "
-    url += utils.FloatToString(session.machine.Xposts) + " "
+    url += utils.FloatToString(session.machine.Xposts)
     session.RawGet(url)
 }
 
