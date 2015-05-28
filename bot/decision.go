@@ -5,6 +5,7 @@ import(
     "bot/utils"
     "bot/http"
     "strings"
+    "math"
 )
 
 func BasicDecision(s *session.Session, follows int, likes int, intervals int, done chan bool){
@@ -53,7 +54,7 @@ func sort(s *session.Session, next chan *group, follows, likes int, calls, total
     var instances []group
     count := 0
     x := 0
-    min := 1.1
+    min := math.Inf(1)
     for {
         select {
             case instance := <-next:
@@ -130,7 +131,7 @@ func listen(s *session.Session, grp chan *group, next chan *http.Posts, calls, c
                 i := len(posts.Data) - 1
                 *count += len(posts.Data)
                 go process(s, posts, i, grp)
-
+                
                 close(next)
                 if *calls == utils.MAXPOSTGRAB || posts.Pagination.Next_url == "" {
                     return
@@ -168,9 +169,10 @@ func process(s *session.Session, posts *http.Posts, i int, grp chan *group){
             Posts: float64(user.Data.Counts.Media),
         }
 
+        // Forget sigmoid for now
         grp <- &group{
             id:posts.Data[i].Id,
-            value: person.Sigmoid(s.GetTheta()),
+            value: person.Followers/person.Following,
             user: posts.Data[i].User.Username,
         }
 
