@@ -21,6 +21,7 @@ func LogisticRegression(s *session.Session){
     log.Println(minimum)
 
     s.SetTheta(minimum)
+    s.StopProcessing()
 }
 
 func Minimize(objective Objective, thetas []float64) []float64{

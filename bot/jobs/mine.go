@@ -63,6 +63,7 @@ func process(s *session.Session, users *http.Users, i int, follows float64){
     // Catches up and thus done
     if s.FinishedCount() {
         s.SavePeople()
+        s.StopProcessing()
     }
 }
 

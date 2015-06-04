@@ -68,7 +68,7 @@ func (session *Session) GetPeople() (people []Person){
 }
 
 func (session *Session) GetPeopleCursor(positive bool, offset int) *datastore.Iterator{
-    return datastore.NewQuery("Person").Filter("Follows = ", positive).Limit(400).Offset(offset).KeysOnly().Run(session.context)
+    return datastore.NewQuery("Person").Filter("Follows = ", positive).Limit(utils.MAXREQUESTS).Offset(offset).KeysOnly().Run(session.context)
 }
 
 func (session *Session) GetHashtagCursor() *datastore.Iterator{
@@ -319,6 +319,16 @@ func (session *Session) SetLearning() bool{
 }
 func (session *Session) SetLearnt(){
     session.machine.Learned = true
+    session.SaveMachine()
+}
+func (session *Session) SetProcessing() bool{
+    set := session.machine.Processing
+    session.machine.Processing = true
+    session.SaveMachine()
+    return !set
+}
+func (session *Session) StopProcessing(){
+    session.machine.Processing = false
     session.SaveMachine()
 }
 func (session *Session) SetLimits(followers, following int){

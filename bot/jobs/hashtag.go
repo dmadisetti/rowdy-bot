@@ -56,6 +56,7 @@ func CrawlTags(s *session.Session, positive bool){
         }
     }
     s.IncrementSize(size,positive)
+    s.StopProcessing()
 }
 
 func processTags(s *session.Session, weight float64, tags []string){
@@ -69,10 +70,6 @@ func processTags(s *session.Session, weight float64, tags []string){
 
 func WeightTags(s *session.Session){
     
-    // Stop multiprocessing
-    if s.GetState() > 0 {
-        return
-    }
     s.IncrementState()
 
     tags := s.GetHashtagCursor()
@@ -97,4 +94,5 @@ func WeightTags(s *session.Session){
 
     // Move on
     s.IncrementStep()
+    s.StopProcessing()
 }

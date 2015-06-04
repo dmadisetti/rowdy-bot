@@ -21,6 +21,7 @@ type Machine struct {
 
     // Status
     Status int
+    Processing bool
 
     // For hashtags
     BadSize int
@@ -52,7 +53,7 @@ func NewMachine() *Machine{
         Xfollowers : 0.0,
         Xfollowing : 0.0,
         Xposts : 0.0,
-        }
+    }
 }
 
 func (m *Machine) SetLimits(following int, followers int){

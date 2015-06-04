@@ -16,11 +16,15 @@ import(
 // TODO: Clean this guy
 func Learn(s *session.Session) string{
 
-    if(s.SetLearning()){
+    if s.SetLearning(){
         // New
         log.Println("Set up learning")
         status := http.GetStatus(s)
         s.SetLimits(int(status.Follows), int(status.Followed_by))
+    }
+
+    if !s.SetProcessing() {
+        return "    *"
     }
 
     switch s.GetLearningStep() {
@@ -55,6 +59,7 @@ func Learn(s *session.Session) string{
     case utils.SHARE:
         go s.Share()
         s.IncrementStep()
+        s.StopProcessing()
         return "Sharing"
     }
     
