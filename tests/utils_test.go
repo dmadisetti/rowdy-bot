@@ -18,14 +18,28 @@ func TestComputeHmac256(t *testing.T){
 
 func TestFollowerDecay(t *testing.T){
 	// Set some test
-	magic := 0.75
-	target := int64(1000)
+	testFollowerDecay(t, 0.75, 1000)
+	testFollowerDecay(t, 0.49, 3000)
+}
 
+func testFollowerDecay(t *testing.T, magic float64, target int64){
 	followed_by := target
 	follows := int64(float64(target) * magic)
 
 	// By definition of Magic and Target, this should be true
 	if x := utils.FollowerDecay(followed_by,follows,magic,float64(target)); x != 0 {
-		t.Fatalf("Follower Decay is Broken",x)
+		t.Fatalf("Follower Decay is Broken",x,follows,followed_by)
 	}
+}
+
+func TestLimit(t *testing.T){
+	bound  := 100
+	amount := 0
+	interval := 0
+	utils.Limit(&amount,interval,bound)
+
+	bound    = 100
+	amount   = 10
+	interval = 0
+	utils.Limit(&amount,interval,bound)
 }

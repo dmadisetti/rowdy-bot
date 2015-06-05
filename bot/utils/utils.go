@@ -58,11 +58,10 @@ func Limit(value *int, intervals int, bound int){
     // Make sure within bounds
     limit := int(bound / int(HOUR / INTERVAL))
     if *value > limit {
-      *value = limit
+        *value = limit
     }
-
     // If at bounds, adjust to exactly hit quota
-    if limit == *value && intervals % int(HOUR / INTERVAL) / (bound % int(HOUR / INTERVAL)) == 0 {
+    if limit == *value && bound % int(HOUR / INTERVAL) != 0 && intervals % int(HOUR / INTERVAL) / (bound % int(HOUR / INTERVAL)) == 0 {
         *value += 1
     }
 }
