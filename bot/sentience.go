@@ -12,8 +12,8 @@ import(
 //// Ideal person is a follower
 //// Non ideal person is someone we follow, but doesn't follow back
 
-
-// TODO: Clean this guy
+// Might be worth putting a defer in here incase a job breaks
+// I.E to Clean up is processing
 func Learn(s *session.Session) string{
 
     if s.SetLearning(){
@@ -24,6 +24,7 @@ func Learn(s *session.Session) string{
     }
 
     if !s.SetProcessing() {
+        // Show we're still working
         return "    *"
     }
 
@@ -66,6 +67,7 @@ func Learn(s *session.Session) string{
     return "Stop"
 }
 
+// Build a little status bar for debug and ./toolbelt -l purposes
 func StatusBar(s *session.Session, title string) (bar string) {
     bar = "    " + title + ":"
     BARSIZE := 100 - len(title)

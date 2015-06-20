@@ -9,7 +9,9 @@ import(
     "bot/utils"
 )
 
-// Could dynamically build these, but naw
+// Could dynamically build these, but naw- generated code ever feels nice IM(Humble)O
+// I'm sure there's a nicer interface implementation, 
+// but copy and pasting was all too easy
 
 // Authenticate
 func Authenticate(s *session.Session, code string){

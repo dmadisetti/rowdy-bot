@@ -5,6 +5,8 @@ import(
 	"math"
 	"log"
 )
+
+// Math looks good, but haven't rigorously tested it
 func LogisticRegression(s *session.Session){
 
     // Grab all people because of many iterations
@@ -32,8 +34,9 @@ func Minimize(objective Objective, thetas []float64) []float64{
 
     i := 0
 
+    // Ideally change to step dictating algorithm like lbfgsb
+    // Hardcoded magic makes my soul hurt
     for (math.IsNaN(value) || value >= next) && i < 1000 {
-        // log.Println(value)
         thetas = nthetas
         value = next
         nthetas = objective.EvaluateGradient(thetas)
@@ -58,7 +61,8 @@ func (o Objective) EvaluateFunction(thetas []float64) float64{
     for _, person := range o.People {
         sum += person.J(thetas)
     }
-    //sum += -(o.Lambda/2) * thetas[3] * thetas[3]
+    // For normalization, (if we were dealing with that)
+    // sum += -(o.Lambda/2) * thetas[3] * thetas[3]
     return -sum/o.Size
 }
 
@@ -69,7 +73,9 @@ func (o Objective) EvaluateGradient(thetas []float64) (gradient []float64) {
     gradient[0] = o.CostD(0, thetas)
     gradient[1] = o.CostD(1, thetas)
     gradient[2] = o.CostD(2, thetas)
-    //gradient[3] = o.CostD(3, thetas)
+
+    // Posts lead to over fitting
+    // gradient[3] = o.CostD(3, thetas) 
 
     return
 }
@@ -98,6 +104,7 @@ func (o Objective) CostD(i int, thetas []float64) float64{
         for _, person := range o.People {
             sum += (person.Sigmoid(thetas) - person.Y()) * person.Posts
         }
+        // More Normalization
         sum += o.Lambda * thetas[3]
         break;
     default:

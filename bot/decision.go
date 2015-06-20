@@ -13,6 +13,7 @@ func BasicDecision(s *session.Session, follows int, likes int, intervals int, do
     posts := http.GetPosts(s,s.GetHashtag(intervals))
 
     // Go from end to reduce collision
+    // Doesn't bother checking
     i := 19
     for (likes > 0 || follows > 0) && i >= 0 {
 
@@ -39,7 +40,10 @@ func BasicDecision(s *session.Session, follows int, likes int, intervals int, do
 func IntelligentDecision(s *session.Session, follows int, likes int, intervals int,  done chan bool) {
 
     // Still do round robin, but this time the hashtags are smart
+    // and our choice is educated
     posts := http.GetPosts(s,s.GetHashtag(intervals))
+
+    // Set up channels for async download/ processing from instagram
     next := make(chan *http.Posts)
     grp := make(chan *group)
     count := 0
@@ -81,6 +85,7 @@ func sort(s *session.Session, next chan *group, follows, likes int, calls, total
                     return
                 }
 
+                // We already have our fill and this value won't contribute
                 if instance.id == "continue" || (instance.value <= min && count == follows + likes) {
                     continue
                 }
@@ -99,6 +104,7 @@ func sort(s *session.Session, next chan *group, follows, likes int, calls, total
                     instances = append(instances, *instance)
                     count += 1
                 } else {
+                    // Replace end
                     instances[count - 1] = *instance
                 }
 
@@ -141,6 +147,8 @@ func listen(s *session.Session, grp chan *group, next chan *http.Posts, calls, c
                 nxt := make(chan *http.Posts)
                 batch = http.GetNextPost(s, posts.Pagination.Next_url)
 
+                // Recursion with channels is weird, 
+                // best to just kill this and start another
                 *calls += 1
                 go listen(s, grp, nxt, calls, count)
                 nxt <- &batch
@@ -152,8 +160,10 @@ func listen(s *session.Session, grp chan *group, next chan *http.Posts, calls, c
 func process(s *session.Session, posts *http.Posts, i int, grp chan *group){
     for i >= 0 {
 
+        // I don't really have to parse here, forgot kosher implementation. 
+        // See http/json
         id := strings.Split(posts.Data[i].Id,"_")[1]
-        if posts.Data[i].User_has_liked || s.CheckCache(id) || http.IsFollowing(s,id){
+        if posts.Data[i].User_has_liked || s.CheckCache(id) || http.IsFollowing(s, id){
             // Try to add to channel and stop if done
             grp <- &group{
                 id:"continue",
@@ -161,7 +171,10 @@ func process(s *session.Session, posts *http.Posts, i int, grp chan *group){
             i--
             continue
         }
+
+        // 
         user  := http.GetUser(s, id)
+
         // Create perosn to get value
         person := session.Person{
             Followers: float64(user.Data.Counts.Follows),
@@ -172,7 +185,7 @@ func process(s *session.Session, posts *http.Posts, i int, grp chan *group){
         // Forget sigmoid for now
         grp <- &group{
             id:posts.Data[i].Id,
-            value: person.Followers/person.Following,
+            value: person.Followers/person.Following, // person.Sigmoid(session.GetTheta()) would be the ideal way
             user: posts.Data[i].User.Username,
         }
 

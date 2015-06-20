@@ -1,12 +1,12 @@
 package session
 
+// May only save up to a certain amount of days
+// Big todo would be debug and fix. Intuition say GAE problem
+
 import (
     "appengine/datastore"
     "time"
     "strconv"
-)
-
-import(
 )
 
 // Record to save Followers/Followings on a daily basis
@@ -26,6 +26,7 @@ func (s *Session) GetRecords() (records *Record){
     return
 }
 
+// Saving as a string is pretty hacky, would be ideal to revise this
 func (s *Session) SetRecords(follows, followed_by int64) {
 
     now := time.Now()

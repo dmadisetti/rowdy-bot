@@ -22,6 +22,7 @@ type Settings struct {
 }
 
 func NewSettings()*Settings{
+    // Default but all changable
     return &Settings{
         Errored : false,
         Target  : 1000,

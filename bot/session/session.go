@@ -52,7 +52,12 @@ func NewSession(r *http.Request) *Session {
     return s
 }
 
-// Talk with the data layer
+/* 
+ *
+ * Talk with the data layer
+ *
+ */
+
 func (session *Session) LoadSettings() bool{
     err := datastore.Get(session.context,datastore.NewKey(session.context,"Settings","",1, nil),session.settings)
     return !(err != nil || !session.Valid())
@@ -132,9 +137,7 @@ func (session *Session) FlushEntity(entity string){
 func (session *Session) FlushCache(){
     memcache.Flush(session.context)
 }
-
-
-// Cache
+ 
 func (session *Session) CheckCache(id string) bool{
     item := &memcache.Item{
         Key:   id,
@@ -147,7 +150,11 @@ func (session *Session) CheckCache(id string) bool{
     return false
 }
 
-// Session helpers
+/* 
+ *
+ * Session Helpers
+ *
+ */ 
 func (session *Session) IncrementCount(){
     session.count += 1
     return
@@ -197,7 +204,11 @@ func (session *Session) InitAuth(client_id, client_secret, callback, hash string
     }
 }
 
-// Machine helpers
+/* 
+ *
+ * Machine Helpers
+ *
+ */
 func (s *Session) Warn(code int){
     s.context.Warningf("Bad Code: %v",code)
 }
@@ -221,7 +232,11 @@ func (session *Session) IncrementSize(size int, positive bool) {
     session.SaveMachine()    
 }
 
-// HTTP functions
+/* 
+ *
+ * HTTP helpers
+ *
+ */ 
 func (session *Session) Get(uri string) (*http.Response, error){
     request,err := http.NewRequest("GET", uri +"?access_token="+ session.settings.Access_token +"&client_id=" + session.settings.Client_id, nil)
     if err != nil {
@@ -292,7 +307,6 @@ func (session *Session) Auth(code string) *json.Decoder{
     return decoder
 }
 
-// Might be better breaking into actions
 func (session *Session) SetAuth(token, id string){
     session.settings.Access_token = token
     session.settings.Id = id
@@ -309,8 +323,13 @@ func (session *Session) SetHashtags(tags []string){
     session.SaveSettings()
 }
 
-// Setters
-// Machine
+/* 
+ *
+ * Setters
+ *
+ */
+
+/* Machine */
 func (session *Session) SetLearning() bool{
     set := session.machine.Learning
     session.machine.Learning = true
@@ -355,8 +374,13 @@ func (session *Session) SetTheta(theta []float64){
     session.SaveMachine()
 }
 
-// Getters
-// Settings
+/* 
+ *
+ * Getters
+ *
+ */
+
+/* Settings */
 func (s *Session) GetHashtag(intervals int) (hashtag string){
     hashtag = s.settings.Hashtags[intervals % len(s.settings.Hashtags)]
     s.context.Infof("Hashtag: %v",hashtag)    // Some logging
@@ -375,9 +399,11 @@ func (s *Session) GetMagic() float64 {
 func (s *Session) GetTarget() float64 {
     return s.settings.Target
 }
+func (s *Session) GetHashtags() []string{
+    return s.settings.Hashtags
+}
 
-// Getters
-// Machine
+/* Machine */
 func (session *Session) GetLimit() int{
     return session.machine.GetLimit()
 }
@@ -417,10 +443,6 @@ func (session *Session) GetTheta() []float64{
 // For rendering
 func (s *Session) GetAuthLink() string{
     return "https://instagram.com/oauth/authorize/?client_id="+ s.settings.Client_id + "&response_type=code&scope=likes+comments+relationships&redirect_uri=" + s.settings.Callback
-}
-
-func (s *Session) GetHashtags() []string{
-    return s.settings.Hashtags
 }
 
 // Http helpers

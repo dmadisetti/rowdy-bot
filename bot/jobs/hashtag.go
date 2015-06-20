@@ -10,13 +10,13 @@ import(
 func CrawlTags(s *session.Session, positive bool){
     keys := s.GetPeopleCursor(positive, utils.MAXREQUESTS * s.GetState())
     s.IncrementState()
-    z := 0
+    total := 0
     size := 0
     for {
         key, err := keys.Next(nil)
-        z += 1
+        total += 1
         if err != nil {
-            if z < utils.MAXREQUESTS {
+            if total < utils.MAXREQUESTS {
                 s.IncrementStep()
             }
             break // No further entities match the query.
@@ -68,6 +68,7 @@ func processTags(s *session.Session, weight float64, tags []string){
     }
 }
 
+// Simplified and altered page rank
 func WeightTags(s *session.Session){
     
     s.IncrementState()
