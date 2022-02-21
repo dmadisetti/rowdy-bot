@@ -5,6 +5,9 @@ Rowdy-Bot - Because our stuffed dog deserves to be famous
 
 Put together over the weekend and improved off and on over a series of months. To read more about this project, [checkout this blog post](http://blog.postmodern.technology/machine-learning-instagram-bot)
 
+
+![Glorious pictures of Rowdy](https://raw.github.com/dmadisetti/rowdy-bot/master/rowdy.png "Screenshot of IG")
+
 **Note**:Our instagram client got banned. The Machine Learning part of this bot is a little bit to greedy with data. I will no longer be improving this repository, however, if you do in fact decide to fork `rowdy-bot`, you might want to turn down the number of requests- instead of pushing the bot to its limits.
 
 Our stuffed dog is awesome and deserves to become instagram famous. So I wrote him a bot. We're collecting follower data, so we'll see how it goes.
